@@ -5,9 +5,10 @@ Provides comprehensive field metadata for robust data management and future proj
 
 import json
 import datetime
-from typing import Dict, Any, List, Set
+from typing import Dict, Any, List, Set, Optional
 from collections import defaultdict
 import statistics
+import re
 
 class MetadataManager:
     def __init__(self, metadata_file="metadata.json"):
@@ -250,6 +251,13 @@ class MetadataManager:
             "retention_policy": self._suggest_retention_policy(field_name),
             "compliance_tags": self._identify_compliance_requirements(field_name)
         }
+
+        # Structural metadata for routing + schema decisions
+        metadata["structural_profile"] = self._build_structural_profile(
+            field_name,
+            stats,
+            metadata
+        )
     
     def _determine_primary_type(self, types: Set) -> str:
         """Determine the primary/dominant type"""
@@ -488,6 +496,135 @@ class MetadataManager:
             tags.append("PCI_DSS")
         
         return tags
+
+    def _build_structural_profile(self, field_name: str, stats: Dict, metadata: Dict) -> Dict[str, Any]:
+        """Build structural metadata for routing, storage, and relationships."""
+        placement = metadata.get("placement_decision", "unknown")
+        primary_type = metadata.get("type_analysis", {}).get("primary_type", "unknown")
+        nesting_level = self._derive_nesting_level(field_name, stats)
+        parent_field = stats.get("parent_field") or self._derive_parent_field(field_name)
+        storage_engine = self._infer_storage_engine(placement)
+        destination = self._infer_storage_destination(field_name, parent_field, storage_engine, nesting_level)
+        foreign_keys = self._infer_foreign_keys(field_name, parent_field, nesting_level)
+        primary_key = self._infer_primary_key(field_name, parent_field, nesting_level)
+        is_array = bool(
+            stats.get("is_array")
+            or primary_type.startswith("array")
+            or "list" in primary_type
+            or field_name.endswith("[]")
+        )
+
+        return {
+            "field": field_name,
+            "field_path": field_name,
+            "canonical_name": self._to_identifier(field_name),
+            "data_type": primary_type,
+            "nest_level": nesting_level,
+            "parent": parent_field,
+            "storage": storage_engine.upper(),
+            "storage_engine": storage_engine,
+            "table_or_collection": destination,
+            "foreign_key": foreign_keys[0]["field"] if foreign_keys else None,
+            "key_relationships": {
+                "primary_key": primary_key,
+                "foreign_keys": foreign_keys
+            },
+            "is_array": is_array
+        }
+
+    def _derive_nesting_level(self, field_name: str, stats: Dict) -> int:
+        if "nesting_level" in stats:
+            return int(stats["nesting_level"])
+        if "nest_level" in stats:
+            return int(stats["nest_level"])
+        clean = field_name.replace("[]", "")
+        return max(0, clean.count('.'))
+
+    def _derive_parent_field(self, field_name: str) -> Optional[str]:
+        tokens = [self._clean_token(token) for token in field_name.replace("[]", "").split('.') if token]
+        if len(tokens) > 1:
+            return tokens[-2]
+        return None
+
+    def _clean_token(self, token: str) -> str:
+        return token.replace("[]", "").strip()
+
+    def _infer_storage_engine(self, placement_decision: str) -> str:
+        mapping = {
+            "sql": "sql",
+            "mysql": "sql",
+            "mongo": "mongo",
+            "mongodb": "mongo",
+            "buffer": "buffer"
+        }
+        return mapping.get((placement_decision or "").lower(), "unknown")
+
+    def _infer_storage_destination(self, field_name: str, parent_field: str, storage_engine: str, nesting_level: int) -> str:
+        if storage_engine == "sql":
+            if nesting_level == 0:
+                return "logs"
+            anchor = parent_field or field_name.split('.')[0]
+            return self._to_identifier(anchor)
+        elif storage_engine == "mongo":
+            anchor = field_name.split('.')[0]
+            return self._to_identifier(anchor)
+        elif storage_engine == "buffer":
+            return "buffer_queue"
+        return "unassigned"
+
+    def _to_identifier(self, value: str) -> str:
+        if not value:
+            return "field"
+        cleaned = re.sub(r"[^0-9a-zA-Z]+", "_", value)
+        cleaned = re.sub(r"_+", "_", cleaned).strip('_')
+        return cleaned.lower() or "field"
+
+    def _infer_primary_key(self, field_name: str, parent_field: str, nesting_level: int) -> Optional[str]:
+        token = field_name.lower()
+        if token in {"id", "_id"} or token.endswith("_id"):
+            return field_name
+        if nesting_level == 0 and parent_field:
+            return f"{self._to_identifier(parent_field)}_id"
+        return None
+
+    def _infer_foreign_keys(self, field_name: str, parent_field: str, nesting_level: int) -> List[Dict[str, str]]:
+        foreign_keys: List[Dict[str, str]] = []
+        token = field_name.lower()
+        if token.endswith("_id") and parent_field:
+            foreign_keys.append({
+                "field": field_name,
+                "references": parent_field,
+                "relationship": "identifier"
+            })
+            return foreign_keys
+
+        candidate = self._find_related_identifier(parent_field)
+        if candidate:
+            foreign_keys.append({
+                "field": candidate,
+                "references": parent_field or "root",
+                "relationship": "foreign_key"
+            })
+        return foreign_keys
+
+    def _find_related_identifier(self, parent_field: str) -> Optional[str]:
+        candidates = self._find_identifier_candidates()
+        if not candidates:
+            return None
+        if parent_field:
+            for _, name in candidates:
+                if parent_field in name:
+                    return name
+        return candidates[0][1]
+
+    def _find_identifier_candidates(self) -> List:
+        candidates = []
+        for name in self.field_metadata.keys():
+            lowered = name.lower()
+            if lowered.endswith("_id") or lowered in {"id", "_id"}:
+                candidates.append((self._derive_nesting_level(name, {}), name))
+        candidates.sort(key=lambda item: (item[0], item[1]))
+        return candidates
     
     def save_metadata(self):
         """Save enhanced metadata to file"""
@@ -511,6 +648,7 @@ class MetadataManager:
             return {"error": "Field not found in metadata"}
         
         metadata = self.field_metadata[field_name]
+        structural = metadata.get("structural_profile", {})
         return {
             "field_name": field_name,
             "placement": metadata["placement_decision"],
@@ -519,7 +657,10 @@ class MetadataManager:
             "business_criticality": metadata["usage_statistics"]["criticality"],
             "privacy_level": metadata["business_context"]["privacy_level"],
             "indexing_recommended": metadata["usage_statistics"]["indexing_recommendation"]["should_index"],
-            "manual_review_needed": metadata["placement_reasoning"]["manual_review_needed"]
+            "manual_review_needed": metadata["placement_reasoning"]["manual_review_needed"],
+            "storage_engine": structural.get("storage_engine"),
+            "table_or_collection": structural.get("table_or_collection"),
+            "nest_level": structural.get("nest_level")
         }
     
     def get_quality_report(self) -> Dict:
@@ -549,6 +690,15 @@ class MetadataManager:
                 if field.get("drift_tracking", {}).get("should_quarantine", False)
             )
         }
+
+    def get_structural_registry(self) -> List[Dict[str, Any]]:
+        """Return a flattened view of structural metadata for every field."""
+        registry: List[Dict[str, Any]] = []
+        for entry in self.field_metadata.values():
+            structural = entry.get("structural_profile")
+            if structural:
+                registry.append(structural)
+        return registry
     
     def export_schema_recommendations(self) -> Dict:
         """Export schema and optimization recommendations"""
