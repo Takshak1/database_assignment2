@@ -10,18 +10,15 @@ print("=" * 80)
 print("           ADAPTIVE INGESTION & HYBRID BACKEND PLACEMENT")
 print("=" * 80)
 
-# Initialize components with enhanced metadata management
 analyzer = Analyzer()
 storage = StorageManager()
-metadata_mgr = MetadataManager()  # Uses metadata.json with enhanced format
+metadata_mgr = MetadataManager()  
 
 print(f"Enhanced metadata system initialized with {len(metadata_mgr.field_metadata)} detailed field profiles")
 
-# Extract simple placement decisions for backward compatibility
 metadata = metadata_mgr.get_simple_placement_decisions()
 print(f"Extracted {len(metadata)} placement decisions for pipeline compatibility")
 
-# Connect to databases (Phase 4: Commit & Routing)
 print("\n" + "-" * 40)
 print("CONNECTING TO BACKENDS")
 print("-" * 40)
@@ -29,7 +26,6 @@ if not storage.connect():
     print("Database connection failed. Exiting.")
     exit(1)
 
-# Initialize SQL schema from metadata before processing
 if metadata:
     storage.initialize_schema(metadata)
 
@@ -42,19 +38,15 @@ try:
     for i, record in enumerate(stream_records(batch_size=10, delay=1)):
         stats_counter['total'] += 1
         
-        # Phase 1: Analyze field patterns for type ambiguities
         analyzer.update(record)
         stats = analyzer.get_stats()
         
-        # Phase 2: Enhanced placement heuristics with semantic analysis
-        if len(stats) > 0:  # Only classify if we have stats
+        if len(stats) > 0:  
             current_decisions, placement_reasons = classify_with_placement_heuristics(stats)
             
-            # Store placement reasons for analysis
             if i < 10 and 'detailed_placement' not in locals():
                 detailed_placement = placement_reasons
             
-            # Update enhanced metadata for each field
             analyzer_total_stats = {"total": analyzer.total}
             for field_name, field_stats in stats.items():
                 field_placement = placement_reasons.get(field_name, {})
@@ -63,20 +55,16 @@ try:
             current_decisions = {}
             placement_reasons = {}
         
-        # Update metadata with new decisions and enhanced metadata
         for field, decision in current_decisions.items():
             if field not in metadata:
                 metadata[field] = decision
         
-        # Update simple metadata cache for next iteration
         if (i + 1) % 10 == 0:
             metadata.update(metadata_mgr.get_simple_placement_decisions())
         
-        # Save enhanced metadata every 10 records
         if (i + 1) % 10 == 0:
             metadata_mgr.save_metadata()
         
-        # Phase 3: Route and store using stable metadata
         sql_id, mongo_id = storage.store_record(record, metadata)
         
         if sql_id:
@@ -84,12 +72,10 @@ try:
         if mongo_id:
             stats_counter['mongo_stored'] += 1
         
-        # Progress update
         if (i + 1) % 10 == 0:
             counts = storage.get_stats()
             print(f"Processed: {i+1} | SQL: {counts['sql']} | MongoDB: {counts['mongo']}")
         
-        # Detailed output for first few records
         if i < 3:
             sql_fields = [f for f, d in metadata.items() if d == 'sql']
             mongo_fields = [f for f, d in metadata.items() if d == 'mongo']
@@ -98,7 +84,6 @@ try:
             print(f"  Mongo fields: {mongo_fields}")
             print(f"  IDs: SQL={sql_id}, Mongo={mongo_id}")
         
-        # Stop after 50 records for testing
         if i >= 49:
             print(f"Processed {i+1} records, stopping.")
             break
@@ -107,10 +92,8 @@ except KeyboardInterrupt:
     print("\nInterrupted by user")
 
 finally:
-    # Save final enhanced metadata
     metadata_mgr.save_metadata()
     
-    # Final statistics
     final_counts = storage.get_stats()
     print("\n" + "=" * 80)
     print("                              FINAL SUMMARY")
@@ -121,7 +104,6 @@ finally:
     print(f"Enhanced metadata saved:      {'metadata.json':>8}")
     print("=" * 80)
     
-    # Type Ambiguity Report
     ambiguity_report = analyzer.get_normalization_report()
     print("\n" + "=" * 80)
     print("                        TYPE AMBIGUITY ANALYSIS")
@@ -140,7 +122,7 @@ finally:
         print(f"\nCLEAN FIELDS (suitable for MySQL):")
         clean_count = 0
         for field_name, field_info in ambiguity_report["clean_fields"].items():
-            if clean_count < 5:  # Show first 5 examples
+            if clean_count < 5:  
                 print(f"  '{field_name}': {field_info['type']} ({field_info['count']} records)")
                 clean_count += 1
         if len(ambiguity_report["clean_fields"]) > 5:
@@ -149,7 +131,6 @@ finally:
     if not ambiguity_report["ambiguous_fields"]:
         print("\nNo type ambiguities detected - all fields have consistent types")
     
-    # Field uniqueness analysis
     uniqueness_analysis = analyzer.analyze_field_uniqueness()
     print("\n" + "=" * 80)
     print("                      FIELD UNIQUENESS ANALYSIS")
@@ -169,7 +150,7 @@ finally:
     
     if uniqueness_analysis["common_fields"]:
         print(f"\nCOMMON FIELDS ({len(uniqueness_analysis['common_fields'])}):")
-        for field_info in uniqueness_analysis["common_fields"][:5]:  # Show top 5
+        for field_info in uniqueness_analysis["common_fields"][:5]:  
             print(f"  {field_info['field']}: {field_info['uniqueness_ratio']:.1%} unique "
                   f"({field_info['unique_values']}/{field_info['total_occurrences']} values)")
         if len(uniqueness_analysis["common_fields"]) > 5:
@@ -177,7 +158,6 @@ finally:
     
     print("=" * 70)
     
-    # Enhanced placement heuristics analysis
     if 'detailed_placement' in locals():
         placement_summary = get_placement_summary(detailed_placement)
         print("\n" + "=" * 80)
@@ -196,7 +176,7 @@ finally:
         
         if placement_summary["high_confidence_sql"]:
             print(f"\nHIGH-CONFIDENCE SQL PLACEMENTS:")
-            for item in placement_summary["high_confidence_sql"][:8]:  # Show top 8
+            for item in placement_summary["high_confidence_sql"][:8]:  
                 signals = detailed_placement[item['field']]['signals']
                 print(f"  {item['field']}: {item['semantic_type']} "
                       f"(freq={signals['freq']:.2f}, stability={signals['stability']:.2f}, "
@@ -218,7 +198,6 @@ finally:
     
     print("=" * 80)
     
-    # Type Drift Analysis
     drift_summary = analyzer.get_drift_summary()
     if drift_summary['total_fields_tracked'] > 0:
         print("\n" + "=" * 80)
@@ -252,12 +231,11 @@ finally:
         if drift_summary['drift_patterns']:
             print(f"\nDETECTED FLIP PATTERNS:")
             for pattern, fields in drift_summary['drift_patterns'].items():
-                fields_str = ', '.join(fields[:5])  # Show first 5
+                fields_str = ', '.join(fields[:5])  
                 if len(fields) > 5:
                     fields_str += f" + {len(fields)-5} more"
                 print(f"  {pattern}: {fields_str}")
     
-    # Enhanced Metadata Analysis
     quality_report = metadata_mgr.get_quality_report()
     print("\n" + "=" * 80)
     print("                     ENHANCED METADATA ANALYSIS")
@@ -268,11 +246,10 @@ finally:
     print(f"Type ambiguous fields:           {quality_report['type_ambiguous_fields']:>8}")
     print(f"High drift fields:               {quality_report['high_drift_fields']:>8}")
     
-    # Sample field summaries
     print(f"\nSAMPLE FIELD PROFILES:")
     field_count = 0
     for field_name in metadata_mgr.field_metadata:
-        if field_count < 5:  # Show first 5 detailed profiles
+        if field_count < 5:  
             summary = metadata_mgr.get_field_summary(field_name)
             print(f"  {field_name}:")
             print(f"    Placement: {summary['placement']}")
@@ -282,25 +259,24 @@ finally:
             print(f"    Privacy Level: {summary['privacy_level']}")
             print(f"    Indexing Recommended: {summary['indexing_recommended']}")
             if summary['manual_review_needed']:
-                print(f"    ⚠️  Manual Review Required")
+                print(f"       Manual Review Required")
             field_count += 1
         else:
             break
     
-    # Schema Recommendations
     schema_recommendations = metadata_mgr.export_schema_recommendations()
     print(f"\n" + "=" * 80)
     print("                      SCHEMA RECOMMENDATIONS")
     print("=" * 80)
     
     print(f"\nMYSQL SCHEMA RECOMMENDATIONS ({len(schema_recommendations['mysql_schema'])}):")
-    for field in schema_recommendations['mysql_schema'][:10]:  # Show first 10
+    for field in schema_recommendations['mysql_schema'][:10]:  
         nullable = "NULL" if field['nullable'] else "NOT NULL"
         index_note = " [INDEX]" if field['index_recommended'] else ""
         print(f"  {field['field']}: {field['type'].upper()} {nullable}{index_note}")
     
     print(f"\nMONGODB COLLECTIONS ({len(schema_recommendations['mongodb_collections'])}):")
-    for field in schema_recommendations['mongodb_collections'][:10]:  # Show first 10
+    for field in schema_recommendations['mongodb_collections'][:10]:  
         reason_note = f" ({field['reason']})"
         ambiguity_note = " [TYPE AMBIGUOUS]" if field['type_ambiguity'] else ""
         print(f"  {field['field']}{reason_note}{ambiguity_note}")
@@ -312,7 +288,6 @@ finally:
     
     print("=" * 80)
     
-    # Demonstrate bi-temporal join capabilities
     if final_counts['sql'] > 0 and final_counts['mongo'] > 0:
         storage.demonstrate_bi_temporal_join()
     else:

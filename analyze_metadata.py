@@ -1,15 +1,9 @@
-"""
-Enhanced Metadata Analysis Utility
-Provides comprehensive analysis and reporting of the enhanced metadata system
-"""
-
 import json
 from metadata_manager import MetadataManager
 import sys
 from collections import Counter
 
 def main():
-    """Main analysis function"""
     metadata_mgr = MetadataManager()
     
     if not metadata_mgr.field_metadata:
@@ -90,7 +84,7 @@ def main():
     print(f"  Fields with type ambiguity: {len(ambiguous_fields)}")
     if ambiguous_fields:
         print("  Examples:")
-        for field in ambiguous_fields[:5]:  # Show first 5
+        for field in ambiguous_fields[:5]:  
             field_name = field['field_name']
             types = field['type_analysis']['detected_types']
             ambiguity_score = field['type_analysis']['ambiguity_score']
@@ -128,7 +122,6 @@ def main():
             if len(fields) > 3:
                 print(f"    ... and {len(fields) - 3} more")
     
-    # Schema Recommendations Summary
     schema_recs = metadata_mgr.export_schema_recommendations()
     print(f"\nSCHEMA RECOMMENDATIONS SUMMARY:")
     print(f"  MySQL fields: {len(schema_recs['mysql_schema'])}")
@@ -138,25 +131,21 @@ def main():
     print("=" * 80)
 
 def export_detailed_report():
-    """Export detailed report to file"""
     metadata_mgr = MetadataManager()
     
     if not metadata_mgr.field_metadata:
         print("No enhanced metadata found.")
         return
     
-    # Generate comprehensive report
     report = {
         "summary": metadata_mgr.get_quality_report(),
         "schema_recommendations": metadata_mgr.export_schema_recommendations(),
         "field_details": {}
     }
     
-    # Add detailed field information
     for field_name, field_data in metadata_mgr.field_metadata.items():
         report["field_details"][field_name] = metadata_mgr.get_field_summary(field_name)
     
-    # Save to file
     with open("detailed_metadata_report.json", "w") as f:
         json.dump(report, f, indent=2, default=str)
     
@@ -164,7 +153,6 @@ def export_detailed_report():
     print("Note: Enhanced metadata is now stored in metadata.json")
 
 def show_field_detail(field_name):
-    """Show detailed information for a specific field"""
     metadata_mgr = MetadataManager()
     
     if field_name not in metadata_mgr.field_metadata:

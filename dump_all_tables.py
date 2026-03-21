@@ -1,15 +1,10 @@
-"""
-Dump all tables in the MySQL database (streaming_db) with columns and rows.
-- Reads credentials from .env (MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
-- Prints tables, columns, row counts, and dumps up to N rows per table
-"""
 import os
 import sys
 from typing import Optional
 import mysql.connector
 from dotenv import load_dotenv
 
-MAX_ROWS = int(os.getenv("DUMP_MAX_ROWS", "200"))  # cap dump per table
+MAX_ROWS = int(os.getenv("DUMP_MAX_ROWS", "200"))  
 
 
 def connect_mysql():
@@ -25,7 +20,6 @@ def connect_mysql():
 
 def dump_table(cursor, table: str, limit: Optional[int] = MAX_ROWS):
     print(f"\n=== TABLE: {table} ===")
-    # Columns
     cursor.execute(f"DESCRIBE `{table}`")
     cols = cursor.fetchall()
     print("Columns:")
@@ -35,12 +29,10 @@ def dump_table(cursor, table: str, limit: Optional[int] = MAX_ROWS):
         default_info = f" DEFAULT({default})" if default is not None else ""
         print(f"  - {field}: {type_info}{key_info}{null_info}{default_info}")
 
-    # Row count
     cursor.execute(f"SELECT COUNT(*) FROM `{table}`")
     total = cursor.fetchone()[0]
     print(f"Rows: {total}")
 
-    # Dump rows
     if total == 0:
         print("(empty)")
         return
@@ -48,10 +40,8 @@ def dump_table(cursor, table: str, limit: Optional[int] = MAX_ROWS):
     cursor.execute(f"SELECT * FROM `{table}` LIMIT {dump_limit}")
     rows = cursor.fetchall()
 
-    # Get column names
     colnames = [desc[0] for desc in cursor.description]
     print(f"\nFirst {len(rows)} rows:")
-    # Pretty print rows
     for i, row in enumerate(rows, 1):
         pairs = ", ".join(f"{col}={repr(val)[:200]}" for col, val in zip(colnames, row))
         print(f"  {i}. {pairs}")

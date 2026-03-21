@@ -2,7 +2,6 @@ import mysql.connector
 from pymongo import MongoClient
 import sys
 
-# MySQL check
 import os
 from dotenv import load_dotenv
 import mysql.connector
@@ -11,7 +10,6 @@ import sys
 
 load_dotenv()
 
-# MySQL check
 try:
     c = mysql.connector.connect(
         host=os.getenv('MYSQL_HOST', 'localhost'),
@@ -25,7 +23,6 @@ try:
 except Exception as e:
     print('MYSQL_ERR', e)
 
-# MongoDB check
 try:
     client = MongoClient(f"mongodb://{os.getenv('MONGO_HOST','localhost')}:{os.getenv('MONGO_PORT',27017)}/", serverSelectionTimeoutMS=3000)
     client.server_info()

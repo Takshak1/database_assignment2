@@ -1,7 +1,3 @@
-"""
-storage_manager.py - Handles routing and storage to SQL/MongoDB
-Implements Phase 4: Commit & Routing with bi-temporal timestamps
-"""
 import os
 import mysql.connector
 from pymongo import MongoClient
@@ -9,10 +5,8 @@ from datetime import datetime
 import json
 from dotenv import load_dotenv
 
-# Load environment variables from .env (if present)
 load_dotenv()
 
-# Database Configurations (read from environment with sensible defaults)
 MYSQL_CONFIG = {
     'host': os.getenv('MYSQL_HOST', 'localhost'),
     'user': os.getenv('MYSQL_USER', 'root'),
@@ -29,7 +23,6 @@ MONGO_CONFIG = {
 
 
 class StorageManager:
-    """Manages hybrid storage across SQL and MongoDB"""
     
     def __init__(self):
         self.mysql_conn = None
@@ -37,11 +30,9 @@ class StorageManager:
         self.mongo_client = None
         self.mongo_collection = None
         self.sql_schema_created = False
-        self.metadata = {}  # Store complete metadata for schema creation
+        self.metadata = {}  
         
     def connect(self):
-        """Establish connections to both backends"""
-        # Connect to MySQL
         try:
             self.mysql_conn = mysql.connector.connect(**MYSQL_CONFIG)
             self.mysql_cursor = self.mysql_conn.cursor()
@@ -50,11 +41,10 @@ class StorageManager:
             print(f"MySQL connection failed: {e}")
             return False
         
-        # Connect to MongoDB
         try:
             uri = f"mongodb://{MONGO_CONFIG['host']}:{MONGO_CONFIG['port']}/"
             self.mongo_client = MongoClient(uri, serverSelectionTimeoutMS=3000)
-            self.mongo_client.server_info()  # Test connection
+            self.mongo_client.server_info()  
             db = self.mongo_client[MONGO_CONFIG['database']]
             self.mongo_collection = db[MONGO_CONFIG['collection']]
             print("MongoDB connected")
@@ -65,7 +55,6 @@ class StorageManager:
         return True
     
     def initialize_schema(self, metadata):
-        """Initialize SQL schema from complete metadata before processing records"""
         self.metadata = metadata
         if metadata:
             all_sql_fields = [f for f, d in metadata.items() if d == 'sql']
@@ -73,34 +62,27 @@ class StorageManager:
                 self.create_sql_schema(all_sql_fields)
     
     def create_sql_schema(self, sql_fields):
-        """Dynamically create SQL table based on classified fields"""
         if self.sql_schema_created:
             return
         
-        # Drop existing table to recreate with full schema
         try:
             self.mysql_cursor.execute("DROP TABLE IF EXISTS logs")
             self.mysql_conn.commit()
         except Exception as e:
-            print(f"⚠ Could not drop existing table: {e}")
+            print(f"Could not drop existing table: {e}")
         
-        # Build column definitions
         columns = ["id BIGINT AUTO_INCREMENT PRIMARY KEY"]
         
-        # Add username (required in both backends)
         columns.append("username VARCHAR(255) NOT NULL")
         
-        # Add other SQL fields (excluding special columns)
         for field in sql_fields:
             if field in ['username', 'timestamp', 't_stamp', 'sys_ingested_at']:
                 continue
             columns.append(f"{field} TEXT")
         
-        # Bi-temporal timestamps
-        columns.append("t_stamp VARCHAR(50)")  # Client timestamp
-        columns.append("sys_ingested_at DATETIME NOT NULL")  # Server timestamp
+        columns.append("t_stamp VARCHAR(50)")  
+        columns.append("sys_ingested_at DATETIME NOT NULL")  
         
-        # Create table
         create_query = f"""
         CREATE TABLE IF NOT EXISTS logs (
             {', '.join(columns)},
@@ -118,24 +100,12 @@ class StorageManager:
             print(f"SQL schema creation failed: {e}")
     
     def store_record(self, record, decisions):
-        """
-        Route and store record to appropriate backends
-        
-        Args:
-            record: normalized record dict
-            decisions: dict mapping field -> 'sql' or 'mongo'
-        
-        Returns:
-            (sql_id, mongo_id) tuple
-        """
-        # Extract timestamps
+
         t_stamp = record.get('timestamp', datetime.now().isoformat())
         sys_ingested_at = datetime.now()
         
-        # Extract username (required in both backends)
         username = record.get('username', 'unknown')
         
-        # Split record based on decisions
         sql_data = {'username': username}
         mongo_data = {'username': username}
         
@@ -146,7 +116,6 @@ class StorageManager:
             decision = decisions.get(field, 'mongo')
             
             if decision == 'sql':
-                # Only store non-nested in SQL
                 if not isinstance(value, (dict, list)):
                     sql_data[field] = value
                 else:
@@ -154,22 +123,17 @@ class StorageManager:
             else:
                 mongo_data[field] = value
         
-        # Add bi-temporal timestamps to both
         sql_data['t_stamp'] = t_stamp
         sql_data['sys_ingested_at'] = sys_ingested_at.strftime('%Y-%m-%d %H:%M:%S.%f')
         mongo_data['t_stamp'] = t_stamp
         mongo_data['sys_ingested_at'] = sys_ingested_at
         
-        # Insert into SQL
-        sql_id = self._insert_sql(sql_data)
-        
-        # Insert into MongoDB
+        sql_id = self._insert_sql(sql_data)        
         mongo_id = self._insert_mongo(mongo_data)
         
         return sql_id, mongo_id
     
     def _insert_sql(self, data):
-        """Insert record into MySQL"""
         try:
             columns = list(data.keys())
             values = [data[col] for col in columns]
@@ -187,7 +151,6 @@ class StorageManager:
             return None
     
     def _insert_mongo(self, data):
-        """Insert document into MongoDB"""
         try:
             result = self.mongo_collection.insert_one(data)
             return str(result.inserted_id)
@@ -196,7 +159,6 @@ class StorageManager:
             return None
     
     def get_stats(self):
-        """Get record counts from both backends"""
         sql_count = 0
         mongo_count = 0
         
@@ -214,21 +176,10 @@ class StorageManager:
         return {'sql': sql_count, 'mongo': mongo_count}
     
     def get_linked_records_by_user(self, username, limit=10):
-        """
-        Demonstrate bi-temporal join: fetch records from both backends for a user
-        
-        Args:
-            username: target username to query
-            limit: max records to return from each backend
-            
-        Returns:
-            dict with 'sql_records' and 'mongo_records' showing linked data
-        """
         sql_records = []
         mongo_records = []
         
         try:
-            # Query SQL records for this user
             sql_query = """
             SELECT username, t_stamp, sys_ingested_at, id 
             FROM logs 
@@ -239,7 +190,6 @@ class StorageManager:
             self.mysql_cursor.execute(sql_query, (username, limit))
             sql_results = self.mysql_cursor.fetchall()
             
-            # Convert to dict format
             sql_columns = [desc[0] for desc in self.mysql_cursor.description]
             for row in sql_results:
                 sql_records.append(dict(zip(sql_columns, row)))
@@ -248,13 +198,11 @@ class StorageManager:
             print(f"SQL query error: {e}")
         
         try:
-            # Query MongoDB records for this user
             mongo_results = self.mongo_collection.find(
                 {"username": username},
                 {"username": 1, "t_stamp": 1, "sys_ingested_at": 1, "_id": 1}
             ).sort("sys_ingested_at", -1).limit(limit)
             
-            # Convert ObjectId to string for display
             for doc in mongo_results:
                 doc['_id'] = str(doc['_id'])
                 mongo_records.append(doc)
@@ -271,22 +219,10 @@ class StorageManager:
         }
     
     def get_linked_records_by_timerange(self, start_time, end_time, limit=20):
-        """
-        Bi-temporal join: fetch records from both backends within a time window
-        
-        Args:
-            start_time: datetime object for range start
-            end_time: datetime object for range end
-            limit: max records per backend
-            
-        Returns:
-            dict with time-linked records from both backends
-        """
         sql_records = []
         mongo_records = []
         
         try:
-            # SQL query with time range
             sql_query = """
             SELECT username, t_stamp, sys_ingested_at, id
             FROM logs 
@@ -305,7 +241,6 @@ class StorageManager:
             print(f"SQL time-range query error: {e}")
         
         try:
-            # MongoDB query with time range
             mongo_results = self.mongo_collection.find(
                 {
                     "sys_ingested_at": {
@@ -332,33 +267,25 @@ class StorageManager:
         }
     
     def demonstrate_bi_temporal_join(self):
-        """
-        Comprehensive demonstration of bi-temporal linking capabilities
-        Shows how records are connected across backends via username + timestamps
-        """
         print("\n" + "=" * 80)
         print("                    BI-TEMPORAL JOIN DEMONSTRATION")
         print("=" * 80)
         
         try:
-            # Get sample usernames from both backends
             sql_users = []
             mongo_users = []
             
-            # Sample users from SQL
             try:
                 self.mysql_cursor.execute("SELECT DISTINCT username FROM logs LIMIT 3")
                 sql_users = [row[0] for row in self.mysql_cursor.fetchall()]
             except:
                 pass
             
-            # Sample users from MongoDB
             try:
                 mongo_users = list(self.mongo_collection.distinct("username"))[:3]
             except:
                 pass
             
-            # Find common users (demonstrates linking capability)
             common_users = list(set(sql_users) & set(mongo_users))
             
             print(f"SQL Users Sample: {sql_users}")
@@ -366,7 +293,6 @@ class StorageManager:
             print(f"Common Users (Linkable): {common_users}")
             
             if common_users:
-                # Demonstrate user-based linking
                 sample_user = common_users[0]
                 print(f"\nBi-Temporal Join for User: '{sample_user}'")
                 print("-" * 50)
@@ -386,13 +312,12 @@ class StorageManager:
                 print(f"  - Total MongoDB records: {linked_data['total_mongo']}")
                 print(f"  - Linking Key: username='{sample_user}' + bi-temporal timestamps")
             
-            # Demonstrate time-range linking
             print(f"\nTime-Range Bi-Temporal Join")
             print("-" * 40)
             from datetime import datetime, timedelta
             
             now = datetime.now()
-            start_time = now - timedelta(hours=1)  # Last hour
+            start_time = now - timedelta(hours=1)  
             end_time = now
             
             time_linked = self.get_linked_records_by_timerange(start_time, end_time, limit=5)
@@ -420,7 +345,6 @@ class StorageManager:
             print(f"Bi-temporal demonstration error: {e}")
     
     def close(self):
-        """Close all connections"""
         if self.mysql_cursor:
             self.mysql_cursor.close()
         if self.mysql_conn:

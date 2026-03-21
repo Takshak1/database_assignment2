@@ -1,13 +1,9 @@
-"""
-verify_setup.py - Verify all components are ready
-"""
 from storage_manager import StorageManager
 
 def verify():
     print("Verifying Assignment Setup...")
     print("-" * 50)
     
-    # Test file imports
     try:
         from ingestion import stream_records
         from normalize import normalize_record
@@ -18,7 +14,6 @@ def verify():
         print(f"✗ Module import failed: {e}")
         return False
     
-    # Test database connections
     storage = StorageManager()
     if not storage.connect():
         print("✗ Database connection failed")

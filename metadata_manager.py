@@ -1,8 +1,3 @@
-"""
-Enhanced Metadata Management System
-Provides comprehensive field metadata for robust data management and future project phases
-"""
-
 import json
 import datetime
 from typing import Dict, Any, List, Set, Optional
@@ -17,18 +12,14 @@ class MetadataManager:
         self.load_metadata()
         
     def load_metadata(self):
-        """Load existing enhanced metadata or create empty structure"""
         try:
             with open(self.metadata_file, 'r') as f:
                 data = json.load(f)
                 
-                # Check if it's old simple metadata format or new enhanced format
                 if isinstance(list(data.values())[0], str):
-                    # Old simple format: {"field_name": "sql"|"mongo"}
                     print(f"Converting simple metadata to enhanced format...")
                     self._convert_simple_to_enhanced(data)
                 else:
-                    # New enhanced format
                     self.field_metadata = data
                     print(f"Loaded enhanced metadata for {len(self.field_metadata)} fields")
         except FileNotFoundError:
@@ -119,18 +110,9 @@ class MetadataManager:
         print(f"Converted {len(simple_metadata)} simple metadata entries to enhanced format")
     
     def update_field_metadata(self, field_name: str, stats: Dict, placement_info: Dict, analyzer_stats: Dict):
-        """
-        Update comprehensive metadata for a field
-        
-        Args:
-            field_name: Name of the field
-            stats: Statistics from analyzer.get_stats()
-            placement_info: Placement decision and reasoning
-            analyzer_stats: Additional analyzer information
-        """
+
         current_time = datetime.datetime.now().isoformat()
         
-        # Initialize field metadata if not exists
         if field_name not in self.field_metadata:
             self.field_metadata[field_name] = {
                 "creation_timestamp": current_time,
@@ -151,10 +133,8 @@ class MetadataManager:
         metadata = self.field_metadata[field_name]
         metadata["last_updated"] = current_time
         
-        # Update placement decision
         metadata["placement_decision"] = placement_info.get("decision", "unknown")
         
-        # Enhanced data profile
         metadata["data_profile"] = {
             "total_records": stats.get("freq", 0) * analyzer_stats.get("total", 1),
             "frequency": stats.get("freq", 0),
@@ -166,7 +146,6 @@ class MetadataManager:
             "stability_score": stats.get("stability", 0.0)
         }
         
-        # Comprehensive type analysis
         type_info = stats.get("types", set())
         metadata["type_analysis"] = {
             "detected_types": list(type_info),
@@ -177,7 +156,6 @@ class MetadataManager:
             "type_consistency": self._calculate_type_consistency(type_info)
         }
         
-        # Enhanced semantic analysis
         semantic_info = stats.get("semantic_info", {})
         metadata["semantic_analysis"] = {
             "detected_kind": semantic_info.get("detected_kind", "unknown"),
@@ -192,7 +170,6 @@ class MetadataManager:
             "is_long_text": semantic_info.get("is_long_text", False)
         }
         
-        # Detailed placement reasoning
         metadata["placement_reasoning"] = {
             "reason": placement_info.get("reason", "unknown"),
             "confidence": placement_info.get("confidence", 0.0),
@@ -201,7 +178,6 @@ class MetadataManager:
             "manual_review_needed": self._needs_manual_review(stats, placement_info)
         }
         
-        # Drift tracking information
         drift_info = stats.get("drift_analysis", {})
         metadata["drift_tracking"] = {
             "drift_score": drift_info.get("drift_score", 0.0),
@@ -211,21 +187,18 @@ class MetadataManager:
             "stability_trend": self._analyze_stability_trend(stats)
         }
         
-        # Quality metrics
         metadata["quality_metrics"] = {
             "completeness": self._calculate_completeness(stats),
             "consistency": self._calculate_consistency(stats),
             "validity": self._calculate_validity(stats, semantic_info),
             "accuracy_estimate": self._estimate_accuracy(field_name, stats),
-            "data_quality_score": 0.0  # Will be calculated
+            "data_quality_score": 0.0  
         }
         
-        # Calculate overall data quality score
         metadata["quality_metrics"]["data_quality_score"] = self._calculate_overall_quality_score(
             metadata["quality_metrics"]
         )
         
-        # Usage statistics
         metadata["usage_statistics"] = {
             "access_frequency": "high" if stats.get("freq", 0) > 0.7 else "medium" if stats.get("freq", 0) > 0.3 else "low",
             "criticality": self._assess_field_criticality(field_name, stats),
@@ -234,7 +207,6 @@ class MetadataManager:
             "indexing_recommendation": self._recommend_indexing(field_name, stats)
         }
         
-        # Schema evolution tracking
         if self._schema_changed(field_name, stats):
             metadata["schema_evolution"].append({
                 "timestamp": current_time,
@@ -244,7 +216,6 @@ class MetadataManager:
                 "impact_assessment": "medium"
             })
         
-        # Business context (can be enhanced later)
         metadata["business_context"] = {
             "domain": self._infer_business_domain(field_name),
             "privacy_level": self._assess_privacy_level(field_name),
@@ -260,12 +231,10 @@ class MetadataManager:
         )
     
     def _determine_primary_type(self, types: Set) -> str:
-        """Determine the primary/dominant type"""
         if not types:
             return "unknown"
         if len(types) == 1:
             return list(types)[0]
-        # Logic to determine primary type when multiple exist
         type_priority = ['str', 'int', 'float', 'bool', 'dict', 'list']
         for t in type_priority:
             if t in types:
@@ -273,28 +242,23 @@ class MetadataManager:
         return list(types)[0]
     
     def _calculate_type_consistency(self, types: Set) -> float:
-        """Calculate type consistency score"""
         if not types:
             return 0.0
-        return 1.0 - (len(types) - 1) * 0.2  # Penalize multiple types
+        return 1.0 - (len(types) - 1) * 0.2  
     
     def _is_identifier_field(self, field_name: str, semantic_info: Dict) -> bool:
-        """Check if field appears to be an identifier"""
         id_keywords = ['id', 'uuid', 'key', 'token', 'session']
         return any(keyword in field_name.lower() for keyword in id_keywords)
     
     def _is_measurement_field(self, field_name: str, semantic_info: Dict) -> bool:
-        """Check if field appears to be a measurement"""
         measurement_keywords = ['temperature', 'pressure', 'speed', 'altitude', 'usage', 'rate', 'level']
         return any(keyword in field_name.lower() for keyword in measurement_keywords)
     
     def _is_categorical_field(self, stats: Dict) -> bool:
-        """Check if field appears to be categorical"""
         uniqueness_ratio = stats.get("uniqueness_ratio", 1.0)
-        return uniqueness_ratio < 0.1  # Less than 10% unique values suggests categorical
+        return uniqueness_ratio < 0.1 
     
     def _classify_data_sensitivity(self, field_name: str) -> str:
-        """Classify data sensitivity level"""
         sensitive_fields = ['email', 'phone', 'address', 'name', 'ssn', 'credit']
         public_fields = ['city', 'country', 'weather', 'timezone']
         
@@ -307,7 +271,6 @@ class MetadataManager:
             return "internal"
     
     def _needs_manual_review(self, stats: Dict, placement_info: Dict) -> bool:
-        """Determine if field needs manual review"""
         return (
             stats.get("has_type_ambiguity", False) or
             placement_info.get("confidence", 1.0) < 0.7 or
@@ -315,7 +278,6 @@ class MetadataManager:
         )
     
     def _analyze_stability_trend(self, stats: Dict) -> str:
-        """Analyze stability trend"""
         stability = stats.get("stability", 1.0)
         if stability > 0.9:
             return "stable"
@@ -327,23 +289,17 @@ class MetadataManager:
             return "highly_unstable"
     
     def _calculate_completeness(self, stats: Dict) -> float:
-        """Calculate data completeness score"""
-        # Assume completeness based on frequency (could be enhanced)
         return min(1.0, stats.get("freq", 0.0) * 1.2)
     
     def _calculate_consistency(self, stats: Dict) -> float:
-        """Calculate data consistency score"""
         return stats.get("stability", 0.0)
     
     def _calculate_validity(self, stats: Dict, semantic_info: Dict) -> float:
-        """Calculate data validity score"""
         semantic_weight = semantic_info.get("semantic_weight", 0.0)
         type_consistency = self._calculate_type_consistency(stats.get("types", set()))
         return (semantic_weight + type_consistency) / 2.0
     
     def _estimate_accuracy(self, field_name: str, stats: Dict) -> float:
-        """Estimate data accuracy"""
-        # Basic heuristic - could be enhanced with validation rules
         base_accuracy = 0.8
         if stats.get("has_type_ambiguity", False):
             base_accuracy -= 0.2
@@ -352,7 +308,6 @@ class MetadataManager:
         return max(0.0, base_accuracy)
     
     def _calculate_overall_quality_score(self, quality_metrics: Dict) -> float:
-        """Calculate overall data quality score"""
         weights = {
             "completeness": 0.3,
             "consistency": 0.25,
@@ -367,7 +322,6 @@ class MetadataManager:
         return round(total_score, 3)
     
     def _assess_field_criticality(self, field_name: str, stats: Dict) -> str:
-        """Assess field criticality for business operations"""
         critical_fields = ['id', 'user', 'timestamp', 'status', 'amount', 'payment']
         field_lower = field_name.lower()
         
@@ -379,7 +333,6 @@ class MetadataManager:
             return "standard"
     
     def _assess_business_importance(self, field_name: str) -> str:
-        """Assess business importance of field"""
         high_importance = ['revenue', 'customer', 'user', 'transaction', 'order']
         field_lower = field_name.lower()
         
@@ -389,7 +342,6 @@ class MetadataManager:
             return "medium"
     
     def _assess_query_optimization(self, stats: Dict) -> str:
-        """Assess potential for query optimization"""
         if stats.get("is_unique_field", False):
             return "excellent"
         elif stats.get("uniqueness_ratio", 0.0) > 0.7:
@@ -400,7 +352,6 @@ class MetadataManager:
             return "low"
     
     def _recommend_indexing(self, field_name: str, stats: Dict) -> Dict:
-        """Recommend indexing strategy"""
         recommendations = {
             "should_index": False,
             "index_type": "none",
@@ -431,7 +382,6 @@ class MetadataManager:
         return recommendations
     
     def _schema_changed(self, field_name: str, stats: Dict) -> bool:
-        """Check if schema has changed for field"""
         if field_name not in self.field_metadata:
             return False
         
@@ -440,7 +390,6 @@ class MetadataManager:
         return old_types != new_types
     
     def _infer_business_domain(self, field_name: str) -> str:
-        """Infer business domain of field"""
         domains = {
             "user_management": ['user', 'name', 'email', 'phone', 'profile'],
             "location": ['city', 'country', 'address', 'gps', 'timezone'],
@@ -458,7 +407,6 @@ class MetadataManager:
         return "general"
     
     def _assess_privacy_level(self, field_name: str) -> str:
-        """Assess privacy level requirements"""
         pii_fields = ['email', 'phone', 'name', 'address']
         sensitive_fields = ['location', 'gps', 'health', 'biometric']
         
@@ -471,7 +419,6 @@ class MetadataManager:
             return "standard"
     
     def _suggest_retention_policy(self, field_name: str) -> str:
-        """Suggest data retention policy"""
         privacy_level = self._assess_privacy_level(field_name)
         
         if privacy_level == "pii":
@@ -482,7 +429,6 @@ class MetadataManager:
             return "indefinite"
     
     def _identify_compliance_requirements(self, field_name: str) -> List[str]:
-        """Identify potential compliance requirements"""
         tags = []
         privacy_level = self._assess_privacy_level(field_name)
         
@@ -627,7 +573,6 @@ class MetadataManager:
         return candidates
     
     def save_metadata(self):
-        """Save enhanced metadata to file"""
         try:
             with open(self.metadata_file, 'w') as f:
                 json.dump(self.field_metadata, f, indent=2, default=str)
@@ -636,14 +581,12 @@ class MetadataManager:
             print(f"Error saving metadata: {e}")
     
     def get_simple_placement_decisions(self):
-        """Get simple field -> placement mapping for backward compatibility"""
         return {
             field_name: field_data.get('placement_decision', 'mongo')
             for field_name, field_data in self.field_metadata.items()
         }
     
     def get_field_summary(self, field_name: str) -> Dict:
-        """Get comprehensive summary for a specific field"""
         if field_name not in self.field_metadata:
             return {"error": "Field not found in metadata"}
         
@@ -664,7 +607,6 @@ class MetadataManager:
         }
     
     def get_quality_report(self) -> Dict:
-        """Generate overall data quality report"""
         if not self.field_metadata:
             return {"error": "No metadata available"}
         
@@ -701,7 +643,6 @@ class MetadataManager:
         return registry
     
     def export_schema_recommendations(self) -> Dict:
-        """Export schema and optimization recommendations"""
         mysql_fields = []
         mongodb_fields = []
         indexing_recommendations = []
