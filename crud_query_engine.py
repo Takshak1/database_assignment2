@@ -176,6 +176,8 @@ class CRUDQueryEngine:
         if entries:
             chosen = self._prefer_exact(field, entries)
             decision = (chosen.get("decision") or "sql").lower()
+            if decision in {"embed", "reference"}:
+                decision = "mongo"
             table = chosen.get("table")
             column = chosen.get("column")
             related_columns: Optional[List[str]] = None
@@ -191,7 +193,7 @@ class CRUDQueryEngine:
                 storage=decision,
                 table=table,
                 column=column,
-                collection=chosen.get("collection"),
+                collection=chosen.get("collection") or chosen.get("target_collection"),
                 status="resolved",
                 notes=notes,
                 related_columns=related_columns,
@@ -255,6 +257,16 @@ class CRUDQueryEngine:
 
     def _prefer_exact(self, field: str, entries: List[Dict[str, Any]]):
         key = field.lower()
+        exact = [entry for entry in entries if (entry.get("field_path") or "").lower() == key]
+        if exact:
+            mongo_like = [
+                entry
+                for entry in exact
+                if (entry.get("decision") or "").lower() in {"mongo", "embed", "reference"}
+            ]
+            if mongo_like:
+                return mongo_like[0]
+            return exact[0]
         for entry in entries:
             if (entry.get("field_path") or "").lower() == key:
                 return entry
@@ -686,7 +698,10 @@ class CRUDQueryEngine:
         mappings = storage_strategy.get("mappings", {}).get("fields", [])
         docs: Dict[str, Dict[str, Any]] = {}
         for mapping in mappings:
-            if (mapping.get("decision") or "sql").lower() != "mongo":
+            decision = (mapping.get("decision") or "sql").lower()
+            if decision in {"embed", "reference"}:
+                decision = "mongo"
+            if decision != "mongo":
                 continue
             collection = mapping.get("collection") or mapping.get("target_collection")
             field_path = mapping.get("field_path")
@@ -709,6 +724,8 @@ class CRUDQueryEngine:
         mongo_updates: Dict[str, Dict[str, Any]] = {}
         for mapping in mappings:
             decision = (mapping.get("decision") or "sql").lower()
+            if decision in {"embed", "reference"}:
+                decision = "mongo"
             field_path = mapping.get("field_path")
             if not field_path:
                 continue
@@ -747,7 +764,10 @@ class CRUDQueryEngine:
     def _plan_entity_mongo_delete(self, storage_strategy: Dict[str, Any]) -> Dict[str, Any]:
         collections = set()
         for mapping in storage_strategy.get("mappings", {}).get("fields", []):
-            if (mapping.get("decision") or "sql").lower() == "mongo":
+            decision = (mapping.get("decision") or "sql").lower()
+            if decision in {"embed", "reference"}:
+                decision = "mongo"
+            if decision == "mongo":
                 collections.add(mapping.get("collection") or mapping.get("target_collection"))
         return {"collections": sorted(c for c in collections if c)}
 
