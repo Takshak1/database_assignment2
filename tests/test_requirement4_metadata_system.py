@@ -30,3 +30,23 @@ def test_analysis_summary_reports_totals(stored_schema: Dict[str, object]) -> No
     assert summary["pipelines"]["sql"] >= 1
     assert "pipelines" in summary
     assert summary.get("pipeline_reasons"), "Expected reason index to be populated for explainability"
+
+
+def test_payload_field_named_type_is_not_misread_as_schema_type(registry) -> None:
+    payload = {
+        "university": {
+            "id": "UNI-2024-001",
+            "name": "Greenfield University",
+            "type": "Public Research University",
+            "established": 1892,
+        }
+    }
+
+    stored = registry.register_schema("university", payload)
+    fields = stored["fields"]
+
+    root = next(f for f in fields if f["field_name"] == "university" and f["parent_field"] is None)
+    nested_type = next(f for f in fields if f["field_name"] == "type" and f["parent_field"] == "university")
+
+    assert root["data_type"] == "object"
+    assert nested_type["data_type"] == "string"

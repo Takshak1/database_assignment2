@@ -12,6 +12,19 @@ class JSONStructureAnalyzer:
 	PRIMITIVE_TYPES = {"string", "integer", "number", "boolean"}
 	COMPLEX_TYPES = {"object", "array"}
 	KNOWN_TYPE_TOKENS = PRIMITIVE_TYPES | {"object", "array", "null"}
+	DEFINITION_HINT_KEYS = {
+		"type",
+		"properties",
+		"items",
+		"nullable",
+		"unique",
+		"required",
+		"default",
+		"enum",
+		"format",
+		"description",
+		"title",
+	}
 	DEEP_NEST_THRESHOLD = 3  # depth >= 3 -> mongo candidate
 	PATTERN_MEANINGS = {
 		"nested object": "possible new table",
@@ -260,7 +273,19 @@ class JSONStructureAnalyzer:
 
 	def _looks_like_definition(self, value: Any) -> bool:
 		if isinstance(value, dict):
-			return any(key in value for key in ("type", "properties", "items"))
+			if "properties" in value or "items" in value:
+				return True
+
+			dtype = value.get("type")
+			if isinstance(dtype, str) and dtype.lower() in self.KNOWN_TYPE_TOKENS:
+				return all(key in self.DEFINITION_HINT_KEYS for key in value.keys())
+
+			if isinstance(dtype, list) and dtype:
+				normalized = [str(item).lower() for item in dtype if isinstance(item, str)]
+				if normalized and all(token in self.KNOWN_TYPE_TOKENS for token in normalized):
+					return all(key in self.DEFINITION_HINT_KEYS for key in value.keys())
+
+			return False
 		if isinstance(value, str):
 			return value.lower() in self.KNOWN_TYPE_TOKENS
 		return False

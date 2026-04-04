@@ -42,7 +42,15 @@ def patch_typing_forward_ref() -> bool:
     if getattr(evaluate, "__patched_for_recursive_guard__", False):
         return False
 
-    def _evaluate(self, globalns, localns, recursive_guard=None):  # type: ignore[override]
+    def _evaluate(self, globalns, localns, *args, **kwargs):  # type: ignore[override]
+        recursive_guard = None
+        if args:
+            recursive_guard = args[0]
+        if "recursive_guard" in kwargs:
+            if recursive_guard is None:
+                recursive_guard = kwargs.pop("recursive_guard")
+            else:
+                kwargs.pop("recursive_guard")
         if recursive_guard is None:
             recursive_guard = set()
         return evaluate(self, globalns, localns, recursive_guard=recursive_guard)

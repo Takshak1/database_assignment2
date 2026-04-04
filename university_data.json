@@ -1,0 +1,233 @@
+{
+  "university": {
+    "id": "UNI-2024-001",
+    "name": "Greenfield University",
+    "established": 1892,
+    "type": "Public Research University",
+    "contact": {
+      "phone": "+1-800-555-0192",
+      "email": "info@greenfielduniversity.edu",
+      "city": "Maplewood",
+      "state": "California",
+      "country": "USA"
+    },
+    "stats": {
+      "total_students": 28450,
+      "total_faculty": 1320,
+      "campuses": 3
+    },
+    "departments": [
+      {
+        "dept_id": "DEPT-CS-01",
+        "name": "Computer Science",
+        "head_emp_id": "EMP-1045",
+        "programs": [
+          {"program_id": "PROG-CS-UG-01", "name": "B.Sc. Computer Science", "level": "Undergraduate", "duration_years": 4, "seats": 120, "tuition_per_year_usd": 12000},
+          {"program_id": "PROG-CS-PG-01", "name": "M.Sc. Artificial Intelligence", "level": "Postgraduate", "duration_years": 2, "seats": 60, "tuition_per_year_usd": 15000}
+        ]
+      },
+      {
+        "dept_id": "DEPT-BUS-01",
+        "name": "Business Administration",
+        "head_emp_id": "EMP-1082",
+        "programs": [
+          {"program_id": "PROG-BUS-PG-01", "name": "MBA", "level": "Postgraduate", "duration_years": 2, "seats": 150, "tuition_per_year_usd": 22000}
+        ]
+      },
+      {
+        "dept_id": "DEPT-ME-01",
+        "name": "Mechanical Engineering",
+        "head_emp_id": "EMP-1103",
+        "programs": [
+          {"program_id": "PROG-ME-UG-01", "name": "B.Tech Mechanical Engineering", "level": "Undergraduate", "duration_years": 4, "seats": 100, "tuition_per_year_usd": 11000}
+        ]
+      },
+      {
+        "dept_id": "DEPT-PSY-01",
+        "name": "Psychology",
+        "head_emp_id": "EMP-1120",
+        "programs": [
+          {"program_id": "PROG-PSY-UG-01", "name": "B.Sc. Psychology", "level": "Undergraduate", "duration_years": 3, "seats": 80, "tuition_per_year_usd": 9500},
+          {"program_id": "PROG-PSY-PG-01", "name": "M.Sc. Clinical Psychology", "level": "Postgraduate", "duration_years": 2, "seats": 40, "tuition_per_year_usd": 13000}
+        ]
+      }
+    ],
+    "faculty_members": [
+      {
+        "emp_id": "EMP-1045",
+        "name": "Dr. Priya Mehta",
+        "designation": "Professor & Head",
+        "dept_id": "DEPT-CS-01",
+        "specializations": ["Machine Learning", "Data Mining"],
+        "experience_years": 18,
+        "publications": 74,
+        "email": "p.mehta@greenfielduniversity.edu",
+        "salary_usd": 98000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1051",
+        "name": "Dr. James Whitfield",
+        "designation": "Associate Professor",
+        "dept_id": "DEPT-CS-01",
+        "specializations": ["Cybersecurity", "Computer Networks"],
+        "experience_years": 12,
+        "publications": 43,
+        "email": "j.whitfield@greenfielduniversity.edu",
+        "salary_usd": 82000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1058",
+        "name": "Dr. Aisha Nkrumah",
+        "designation": "Assistant Professor",
+        "dept_id": "DEPT-CS-01",
+        "specializations": ["Natural Language Processing", "Deep Learning"],
+        "experience_years": 6,
+        "publications": 21,
+        "email": "a.nkrumah@greenfielduniversity.edu",
+        "salary_usd": 68000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1063",
+        "name": "Prof. Daniel Russo",
+        "designation": "Associate Professor",
+        "dept_id": "DEPT-CS-01",
+        "specializations": ["Cloud Computing", "Distributed Systems"],
+        "experience_years": 14,
+        "publications": 38,
+        "email": "d.russo@greenfielduniversity.edu",
+        "salary_usd": 85000,
+        "status": "On Leave"
+      },
+      {
+        "emp_id": "EMP-1082",
+        "name": "Dr. Kevin Wu",
+        "designation": "Professor & Head",
+        "dept_id": "DEPT-BUS-01",
+        "specializations": ["Strategic Management", "Finance"],
+        "experience_years": 22,
+        "publications": 51,
+        "email": "k.wu@greenfielduniversity.edu",
+        "salary_usd": 105000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1088",
+        "name": "Dr. Fatima Al-Hassan",
+        "designation": "Assistant Professor",
+        "dept_id": "DEPT-BUS-01",
+        "specializations": ["Marketing Analytics", "Consumer Behavior"],
+        "experience_years": 8,
+        "publications": 29,
+        "email": "f.alhassan@greenfielduniversity.edu",
+        "salary_usd": 72000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1095",
+        "name": "Prof. Marcus Ellison",
+        "designation": "Visiting Professor",
+        "dept_id": "DEPT-BUS-01",
+        "specializations": ["Entrepreneurship", "Venture Capital"],
+        "experience_years": 30,
+        "publications": 15,
+        "email": "m.ellison@greenfielduniversity.edu",
+        "salary_usd": 60000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1103",
+        "name": "Dr. Laura Simmons",
+        "designation": "Professor & Head",
+        "dept_id": "DEPT-ME-01",
+        "specializations": ["Thermodynamics", "Renewable Energy"],
+        "experience_years": 20,
+        "publications": 62,
+        "email": "l.simmons@greenfielduniversity.edu",
+        "salary_usd": 96000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1109",
+        "name": "Dr. Omar Farouk",
+        "designation": "Associate Professor",
+        "dept_id": "DEPT-ME-01",
+        "specializations": ["Robotics", "Control Systems"],
+        "experience_years": 11,
+        "publications": 34,
+        "email": "o.farouk@greenfielduniversity.edu",
+        "salary_usd": 80000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1120",
+        "name": "Dr. Claire Fontaine",
+        "designation": "Professor & Head",
+        "dept_id": "DEPT-PSY-01",
+        "specializations": ["Clinical Psychology", "Cognitive Behavioral Therapy"],
+        "experience_years": 17,
+        "publications": 48,
+        "email": "c.fontaine@greenfielduniversity.edu",
+        "salary_usd": 91000,
+        "status": "Active"
+      },
+      {
+        "emp_id": "EMP-1127",
+        "name": "Dr. Rohan Iyer",
+        "designation": "Assistant Professor",
+        "dept_id": "DEPT-PSY-01",
+        "specializations": ["Neuropsychology", "Child Development"],
+        "experience_years": 5,
+        "publications": 18,
+        "email": "r.iyer@greenfielduniversity.edu",
+        "salary_usd": 65000,
+        "status": "Active"
+      }
+    ],
+    "students": [
+      {"student_id": "STU-20240001", "name": "Emily Johnson", "email": "emily.j@student.gu.edu", "program_id": "PROG-CS-UG-01", "year": 2, "cgpa": 3.85, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240002", "name": "Rajan Patel", "email": "rajan.p@student.gu.edu", "program_id": "PROG-CS-PG-01", "year": 1, "cgpa": 3.62, "status": "Active", "fees_status": "Partial", "scholarship": false},
+      {"student_id": "STU-20240003", "name": "Sofia Navarro", "email": "sofia.n@student.gu.edu", "program_id": "PROG-BUS-PG-01", "year": 1, "cgpa": 3.74, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240004", "name": "Liam O'Brien", "email": "liam.o@student.gu.edu", "program_id": "PROG-ME-UG-01", "year": 3, "cgpa": 3.10, "status": "Active", "fees_status": "Cleared", "scholarship": false},
+      {"student_id": "STU-20240005", "name": "Yuna Kim", "email": "yuna.k@student.gu.edu", "program_id": "PROG-CS-UG-01", "year": 1, "cgpa": 3.95, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240006", "name": "Arjun Sharma", "email": "arjun.s@student.gu.edu", "program_id": "PROG-CS-PG-01", "year": 2, "cgpa": 3.40, "status": "Active", "fees_status": "Pending", "scholarship": false},
+      {"student_id": "STU-20240007", "name": "Chloe Dubois", "email": "chloe.d@student.gu.edu", "program_id": "PROG-PSY-UG-01", "year": 2, "cgpa": 3.55, "status": "Active", "fees_status": "Cleared", "scholarship": false},
+      {"student_id": "STU-20240008", "name": "Marcus Bell", "email": "marcus.b@student.gu.edu", "program_id": "PROG-BUS-PG-01", "year": 2, "cgpa": 3.20, "status": "Active", "fees_status": "Partial", "scholarship": false},
+      {"student_id": "STU-20240009", "name": "Amara Diallo", "email": "amara.d@student.gu.edu", "program_id": "PROG-PSY-PG-01", "year": 1, "cgpa": 3.88, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240010", "name": "Tyler Brooks", "email": "tyler.b@student.gu.edu", "program_id": "PROG-ME-UG-01", "year": 4, "cgpa": 2.95, "status": "Active", "fees_status": "Pending", "scholarship": false},
+      {"student_id": "STU-20240011", "name": "Mei Lin", "email": "mei.l@student.gu.edu", "program_id": "PROG-CS-UG-01", "year": 3, "cgpa": 3.78, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240012", "name": "Hassan Al-Amin", "email": "hassan.a@student.gu.edu", "program_id": "PROG-BUS-PG-01", "year": 1, "cgpa": 3.45, "status": "Active", "fees_status": "Cleared", "scholarship": false},
+      {"student_id": "STU-20240013", "name": "Priya Kapoor", "email": "priya.k@student.gu.edu", "program_id": "PROG-PSY-PG-01", "year": 2, "cgpa": 3.91, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240014", "name": "Noah Fischer", "email": "noah.f@student.gu.edu", "program_id": "PROG-ME-UG-01", "year": 2, "cgpa": 3.30, "status": "Active", "fees_status": "Partial", "scholarship": false},
+      {"student_id": "STU-20240015", "name": "Isabella Romano", "email": "isabella.r@student.gu.edu", "program_id": "PROG-CS-PG-01", "year": 1, "cgpa": 3.67, "status": "Active", "fees_status": "Cleared", "scholarship": false},
+      {"student_id": "STU-20240016", "name": "Kwame Asante", "email": "kwame.a@student.gu.edu", "program_id": "PROG-CS-UG-01", "year": 4, "cgpa": 3.05, "status": "Active", "fees_status": "Cleared", "scholarship": false},
+      {"student_id": "STU-20240017", "name": "Zara Ahmed", "email": "zara.a@student.gu.edu", "program_id": "PROG-PSY-UG-01", "year": 3, "cgpa": 3.50, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240018", "name": "Lucas Martins", "email": "lucas.m@student.gu.edu", "program_id": "PROG-BUS-PG-01", "year": 2, "cgpa": 3.15, "status": "Suspended", "fees_status": "Pending", "scholarship": false},
+      {"student_id": "STU-20240019", "name": "Hana Yoshida", "email": "hana.y@student.gu.edu", "program_id": "PROG-CS-UG-01", "year": 1, "cgpa": 3.80, "status": "Active", "fees_status": "Cleared", "scholarship": true},
+      {"student_id": "STU-20240020", "name": "Ethan Clarke", "email": "ethan.c@student.gu.edu", "program_id": "PROG-ME-UG-01", "year": 3, "cgpa": 3.22, "status": "Active", "fees_status": "Cleared", "scholarship": false}
+    ],
+    "courses": [
+      {"course_id": "CS301", "title": "Machine Learning", "credits": 4, "dept_id": "DEPT-CS-01", "instructor_id": "EMP-1045", "semester": "Fall 2024", "enrolled": 87, "capacity": 100},
+      {"course_id": "CS204", "title": "Cybersecurity Essentials", "credits": 3, "dept_id": "DEPT-CS-01", "instructor_id": "EMP-1051", "semester": "Fall 2024", "enrolled": 95, "capacity": 100},
+      {"course_id": "CS312", "title": "Deep Learning", "credits": 4, "dept_id": "DEPT-CS-01", "instructor_id": "EMP-1058", "semester": "Fall 2024", "enrolled": 55, "capacity": 60},
+      {"course_id": "CS220", "title": "Cloud Architecture", "credits": 3, "dept_id": "DEPT-CS-01", "instructor_id": "EMP-1063", "semester": "Fall 2024", "enrolled": 70, "capacity": 90},
+      {"course_id": "BUS201", "title": "Corporate Finance", "credits": 3, "dept_id": "DEPT-BUS-01", "instructor_id": "EMP-1082", "semester": "Fall 2024", "enrolled": 120, "capacity": 150},
+      {"course_id": "BUS215", "title": "Marketing Analytics", "credits": 3, "dept_id": "DEPT-BUS-01", "instructor_id": "EMP-1088", "semester": "Fall 2024", "enrolled": 110, "capacity": 150},
+      {"course_id": "BUS308", "title": "Startup Ecosystems", "credits": 2, "dept_id": "DEPT-BUS-01", "instructor_id": "EMP-1095", "semester": "Fall 2024", "enrolled": 85, "capacity": 100},
+      {"course_id": "ME101", "title": "Thermodynamics I", "credits": 4, "dept_id": "DEPT-ME-01", "instructor_id": "EMP-1103", "semester": "Fall 2024", "enrolled": 98, "capacity": 100},
+      {"course_id": "ME214", "title": "Robotics & Automation", "credits": 4, "dept_id": "DEPT-ME-01", "instructor_id": "EMP-1109", "semester": "Fall 2024", "enrolled": 75, "capacity": 100},
+      {"course_id": "PSY101", "title": "Intro to Psychology", "credits": 3, "dept_id": "DEPT-PSY-01", "instructor_id": "EMP-1120", "semester": "Fall 2024", "enrolled": 78, "capacity": 80},
+      {"course_id": "PSY305", "title": "Neuropsychology", "credits": 3, "dept_id": "DEPT-PSY-01", "instructor_id": "EMP-1127", "semester": "Fall 2024", "enrolled": 38, "capacity": 40}
+    ],
+    "placements": {
+      "year": 2023,
+      "placed": 2450,
+      "total_eligible": 2800,
+      "placement_rate_percent": 87.5,
+      "avg_package_usd": 72000,
+      "top_recruiters": ["Google", "Microsoft", "Amazon", "Deloitte", "Goldman Sachs"]
+    }
+  }
+}

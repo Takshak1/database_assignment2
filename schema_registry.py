@@ -212,6 +212,93 @@ class SchemaRegistry:
 
         return self.get_schema(schema_id)
 
+    def refresh_schema_with_sample(self, schema_id: int, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Extend an existing schema with a sample payload and regenerate metadata."""
+        if not isinstance(sample, dict) or not sample:
+            return self.get_schema(schema_id)
+
+        schema_row = self._get_schema_row(schema_id)
+        raw_schema = json.loads(schema_row["raw_schema"]) if schema_row else {}
+        prepared_existing = self.analyzer.prepare_schema(raw_schema) if raw_schema else {}
+        prepared_sample = self.analyzer.prepare_schema(sample)
+        merged_schema = self._deep_merge_schema(prepared_existing, prepared_sample)
+
+        flattened_fields = self._flatten_schema(merged_schema)
+        if not flattened_fields:
+            return self.get_schema(schema_id)
+
+        with self._get_conn() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    "UPDATE schemas SET raw_schema = ?, updated_at = ? WHERE schema_id = ?",
+                    (json.dumps(merged_schema), datetime.utcnow().isoformat(), schema_id),
+                )
+            except sqlite3.OperationalError:
+                cursor.execute(
+                    "UPDATE schemas SET raw_schema = ? WHERE schema_id = ?",
+                    (json.dumps(merged_schema), schema_id),
+                )
+            cursor.execute("DELETE FROM fields WHERE schema_id = ?", (schema_id,))
+            for field in flattened_fields:
+                cursor.execute(
+                    """
+                    INSERT INTO fields (
+                        schema_id, field_name, data_type, is_array, is_unique,
+                        is_nullable, parent_field, nesting_level, metadata
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        schema_id,
+                        field.field_name,
+                        field.data_type,
+                        int(field.is_array),
+                        int(field.is_unique),
+                        int(field.is_nullable),
+                        field.parent_field,
+                        field.nesting_level,
+                        json.dumps(field.raw_definition),
+                    ),
+                )
+            conn.commit()
+
+        analysis = self.analyzer.analyze(merged_schema, already_prepared=True)
+        classification = self.classifier.classify_entries(analysis.get("entries", []))
+        analysis["entries"] = classification.get("entries", [])
+        analysis.setdefault("summary", {})
+        analysis["summary"]["pipelines"] = classification["summary"].get("pipelines", {})
+        analysis["summary"]["pipeline_reasons"] = classification["summary"].get("reasons", {})
+        blueprint = self.normalizer.generate_blueprint(entity_name=schema_row["entity_name"], entries=analysis["entries"])
+        mongo_strategy = self.mongo_strategy.generate_strategy(entity_name=schema_row["entity_name"], entries=analysis["entries"])
+        storage_strategy = self.storage_generator.generate(
+            entity_name=schema_row["entity_name"],
+            sql_blueprint=blueprint,
+            mongo_strategy=mongo_strategy,
+        )
+        self._save_analysis(schema_id, analysis)
+        self._save_blueprint(schema_id, blueprint)
+        self._save_mongo_strategy(schema_id, mongo_strategy)
+        self._save_storage_strategy(schema_id, storage_strategy)
+
+        return self.get_schema(schema_id)
+
+    def _get_schema_row(self, schema_id: int) -> Optional[sqlite3.Row]:
+        with self._get_conn() as conn:
+            cursor = conn.execute(
+                "SELECT schema_id, entity_name, raw_schema FROM schemas WHERE schema_id = ?",
+                (schema_id,),
+            )
+            return cursor.fetchone()
+
+    def _deep_merge_schema(self, base: Dict[str, Any], incoming: Dict[str, Any]) -> Dict[str, Any]:
+        merged = dict(base)
+        for key, value in incoming.items():
+            if key in merged and isinstance(merged.get(key), dict) and isinstance(value, dict):
+                merged[key] = self._deep_merge_schema(merged[key], value)
+            else:
+                merged[key] = value
+        return merged
+
     def list_schemas(self, entity: Optional[str] = None) -> List[Dict[str, Any]]:
         """Return all schemas, optionally filtered by entity name."""
 
@@ -554,7 +641,9 @@ class SchemaRegistry:
         if definition is None:
             raise ValueError("Schema definition entries cannot be null")
         if isinstance(definition, str):
-            return {"type": definition}
+            known = self.analyzer.KNOWN_TYPE_TOKENS
+            token = definition.lower()
+            return {"type": token if token in known else "string"}
         if isinstance(definition, list):
             return {"type": "enum", "values": definition}
         if not isinstance(definition, dict):

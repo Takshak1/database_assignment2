@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 from schema_registry import SchemaRegistry
 from crud_executor import HybridCRUDExecutor
 from buffer_queue import BufferQueue
+from metadata_manager import MetadataManager
 
 
 class BufferPromoter:
@@ -20,10 +21,12 @@ class BufferPromoter:
         registry: Optional[SchemaRegistry] = None,
         crud_executor: Optional[HybridCRUDExecutor] = None,
         buffer_queue: Optional[BufferQueue] = None,
+        metadata_manager: Optional[MetadataManager] = None,
     ) -> None:
         self.registry = registry or SchemaRegistry()
         self.crud_executor = crud_executor or HybridCRUDExecutor(registry=self.registry)
         self.buffer_queue = buffer_queue or BufferQueue(db_path=self.registry.db_path)
+        self.metadata_manager = metadata_manager or MetadataManager()
 
     def promote(
         self,
@@ -72,6 +75,62 @@ class BufferPromoter:
                     "error": str(exc),
                 })
         return summary
+
+    def promote_frequent_entity(
+        self,
+        *,
+        limit: int = 200,
+        min_count: int = 3,
+    ) -> Dict[str, Any]:
+        entries = self.buffer_queue.list_entries(status="pending", limit=limit)
+        counts: Dict[str, int] = {}
+        samples: Dict[str, Dict[str, Any]] = {}
+        for entry in entries:
+            field_path = entry.get("field_path")
+            payload = entry.get("payload")
+            if not field_path:
+                continue
+            counts[field_path] = counts.get(field_path, 0) + 1
+            if field_path not in samples and isinstance(payload, dict):
+                samples[field_path] = payload
+
+        if not counts:
+            return {"created": False, "reason": "no_buffer_entries"}
+
+        field_path = max(counts, key=counts.get)
+        frequency = counts[field_path]
+        if frequency < min_count:
+            return {
+                "created": False,
+                "reason": "frequency_below_threshold",
+                "field_path": field_path,
+                "count": frequency,
+            }
+
+        entity_name = field_path.split(".")[0]
+        payload = samples.get(field_path)
+        if not payload:
+            return {
+                "created": False,
+                "reason": "missing_payload",
+                "field_path": field_path,
+            }
+
+        stored = self.registry.register_schema(entity_name, payload)
+        self.metadata_manager.mark_entity_from_buffer(
+            field_path,
+            entity_name=entity_name,
+            frequency=frequency,
+        )
+        self.metadata_manager.save_metadata()
+
+        return {
+            "created": True,
+            "schema_id": stored.get("schema_id"),
+            "entity_name": entity_name,
+            "field_path": field_path,
+            "count": frequency,
+        }
 
     # ------------------------------------------------------------------
     # Helpers
@@ -150,10 +209,24 @@ def main() -> None:
         action="store_true",
         help="When set, run live CRUD operations instead of returning plans",
     )
+    parser.add_argument(
+        "--auto-entity",
+        action="store_true",
+        help="Create a new entity from the most frequent buffered field",
+    )
+    parser.add_argument(
+        "--min-count",
+        type=int,
+        default=3,
+        help="Minimum buffered frequency required to create a new entity",
+    )
     args = parser.parse_args()
     promoter = BufferPromoter()
-    stats = promoter.promote(schema_id=args.schema_id, limit=args.limit, execute=args.execute)
-    print(json.dumps(stats, indent=2))
+    if args.auto_entity:
+        result = promoter.promote_frequent_entity(limit=args.limit, min_count=args.min_count)
+    else:
+        result = promoter.promote(schema_id=args.schema_id, limit=args.limit, execute=args.execute)
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

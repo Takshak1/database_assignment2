@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Tuple
 
 from dotenv import load_dotenv
 
@@ -52,6 +52,71 @@ def _safe_repr(value: Any, limit: int = 200) -> str:
     return text if len(text) <= limit else text[:limit] + "..."
 
 
+def _mysql_table_summaries(conn, db_name: str, tables: List[str]) -> Tuple[Dict[str, List[Dict[str, Any]]], Dict[str, List[Dict[str, Any]]]]:
+    columns_by_table: Dict[str, List[Dict[str, Any]]] = {}
+    relations_by_table: Dict[str, List[Dict[str, Any]]] = {}
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = %s
+            ORDER BY TABLE_NAME, ORDINAL_POSITION
+            """,
+            (db_name,),
+        )
+        for row in cursor.fetchall():
+            table = row["TABLE_NAME"]
+            if table not in tables:
+                continue
+            columns_by_table.setdefault(table, []).append(
+                {
+                    "name": row["COLUMN_NAME"],
+                    "type": row["COLUMN_TYPE"],
+                    "nullable": row["IS_NULLABLE"],
+                    "key": row["COLUMN_KEY"],
+                    "default": row["COLUMN_DEFAULT"],
+                }
+            )
+
+        cursor.execute(
+            """
+            SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE TABLE_SCHEMA = %s AND REFERENCED_TABLE_NAME IS NOT NULL
+            ORDER BY TABLE_NAME
+            """,
+            (db_name,),
+        )
+        for row in cursor.fetchall():
+            table = row["TABLE_NAME"]
+            if table not in tables:
+                continue
+            relations_by_table.setdefault(table, []).append(
+                {
+                    "from_column": row["COLUMN_NAME"],
+                    "to_table": row["REFERENCED_TABLE_NAME"],
+                    "to_column": row["REFERENCED_COLUMN_NAME"],
+                }
+            )
+    finally:
+        cursor.close()
+
+    return columns_by_table, relations_by_table
+
+
+def _mongo_schema_hint(coll, cap: int) -> Dict[str, Any]:
+    sample = coll.find().limit(1)
+    doc = next(sample, None)
+    if not doc:
+        return {"sample_fields": [], "sample_types": {}}
+    sample_fields = list(doc.keys())
+    sample_types = {key: type(value).__name__ for key, value in doc.items()}
+    return {"sample_fields": sample_fields, "sample_types": sample_types}
+
+
 def dump_mysql() -> bool:
     if mysql is None:
         print("MySQL driver not available (`mysql-connector-python` not installed).")
@@ -77,6 +142,27 @@ def dump_mysql() -> bool:
             return True
 
         print(f"Found {len(tables)} tables: {tables}")
+        columns_by_table, relations_by_table = _mysql_table_summaries(conn, cfg["database"], tables)
+        print("\nSchema Summary:")
+        for table in tables:
+            print(f"\n- {table}")
+            for column in columns_by_table.get(table, []):
+                print(
+                    "  "
+                    f"{column['name']} {column['type']}"
+                    f" | nullable={column['nullable']}"
+                    f" | key={column['key'] or '-'}"
+                    f" | default={_safe_repr(column['default']) if column['default'] is not None else '-'}"
+                )
+            relations = relations_by_table.get(table, [])
+            if relations:
+                print("  روابط/Relations:")
+                for rel in relations:
+                    print(
+                        f"    {rel['from_column']} -> {rel['to_table']}.{rel['to_column']}"
+                    )
+            else:
+                print("  Relations: none")
         row_cap = _max_rows()
 
         for table in tables:
@@ -149,6 +235,10 @@ def dump_mongodb() -> bool:
             total = coll.count_documents({})
             print(f"\n--- COLLECTION: {coll_name} ---")
             print(f"Total documents: {total}")
+            hint = _mongo_schema_hint(coll, row_cap)
+            print(f"Sample fields: {hint['sample_fields']}")
+            if hint["sample_types"]:
+                print(f"Sample types: {hint['sample_types']}")
             if total == 0:
                 print("(empty)")
                 continue

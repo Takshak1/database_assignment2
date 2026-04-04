@@ -15,13 +15,14 @@ except Exception:  # pragma: no cover
 from schema_registry import SchemaRegistry
 from crud_query_engine import CRUDQueryEngine
 from result_aggregator import ResultAggregator
+from metadata_manager import MetadataManager
 
 load_dotenv()
 
 DEFAULT_MYSQL_CONFIG = {
     "host": os.getenv("MYSQL_HOST", "localhost"),
     "user": os.getenv("MYSQL_USER", "root"),
-    "password": os.getenv("MYSQL_PASSWORD", "devil"),
+    "password": os.getenv("MYSQL_PASSWORD", ""),
     "database": os.getenv("MYSQL_DATABASE", "streaming_db"),
 }
 
@@ -72,6 +73,7 @@ class HybridCRUDExecutor:
         aggregator: Optional[ResultAggregator] = None,
     ) -> None:
         self.registry = registry or SchemaRegistry()
+        self.metadata_manager = MetadataManager(metadata_file)
         self.query_engine = CRUDQueryEngine(
             registry=self.registry,
             metadata_file=metadata_file,
@@ -95,6 +97,8 @@ class HybridCRUDExecutor:
         execute: bool = False,
         limit: Optional[int] = None,
     ) -> CRUDResult:
+        self._sync_metadata_from_schema(schema_id)
+
         op = (operation or "read").lower()
         if op == "insert":
             return CRUDResult(
@@ -139,10 +143,93 @@ class HybridCRUDExecutor:
             )
         raise ValueError(f"Unsupported CRUD operation: {operation}")
 
+    def _sync_metadata_from_schema(self, schema_id: int) -> None:
+        """Populate metadata.json from schema registry entries used by CRUD flows."""
+        try:
+            schema = self.registry.get_schema(schema_id)
+        except Exception:
+            return
+
+        fields = schema.get("fields") or []
+        analysis_entries = (schema.get("analysis") or {}).get("entries") or []
+        analysis_by_path = {
+            (entry.get("field_path") or "").replace("[]", ""): entry
+            for entry in analysis_entries
+            if entry.get("field_path")
+        }
+
+        analyzer_stats = {"total": len(fields) or 1}
+
+        for field in fields:
+            field_name = field.get("field_name")
+            if not field_name:
+                continue
+
+            parent = (field.get("parent_field") or "").replace("[]", "")
+            field_path = f"{parent}.{field_name}" if parent else field_name
+            entry = analysis_by_path.get(field_path) or analysis_by_path.get(field_name) or {}
+
+            dtype = str(field.get("data_type") or "string").lower()
+            if dtype.startswith("array"):
+                type_token = "list"
+            elif dtype in {"integer", "int", "bigint"}:
+                type_token = "int"
+            elif dtype in {"number", "float", "double", "decimal"}:
+                type_token = "float"
+            elif dtype in {"boolean", "bool"}:
+                type_token = "bool"
+            elif dtype in {"object", "json", "jsonb"}:
+                type_token = "dict"
+            else:
+                type_token = "str"
+
+            stats = {
+                "freq": 1.0,
+                "types": {type_token},
+                "unique_count": 1 if field.get("is_unique") else 0,
+                "uniqueness_ratio": 1.0 if field.get("is_unique") else 0.0,
+                "is_unique_field": bool(field.get("is_unique")),
+                "nested": bool(field.get("nesting_level", 0) > 0),
+                "composite_score": 0.8,
+                "stability": 1.0,
+                "semantic_info": {
+                    "detected_kind": "unknown",
+                    "semantic_weight": 0.0,
+                    "avg_length": 0,
+                    "max_length": 0,
+                    "is_long_text": False,
+                },
+                "ambiguity_info": {"ambiguity_score": 0.0},
+                "has_type_ambiguity": False,
+                "drift_analysis": {"drift_score": 0.0, "drift_history": []},
+                "should_quarantine": False,
+                "quarantine_reason": "stable",
+                "nesting_level": int(field.get("nesting_level") or 0),
+                "parent_field": parent or None,
+                "is_array": bool(field.get("is_array")),
+            }
+
+            placement = (entry.get("pipeline") or "sql").lower()
+            placement_info = {
+                "decision": placement,
+                "reason": entry.get("pipeline_reason") or "schema_registry_sync",
+                "confidence": float(entry.get("pipeline_confidence") or 1.0),
+                "signals": {
+                    "source": "schema_registry",
+                    "schema_id": schema_id,
+                },
+            }
+
+            self.metadata_manager.update_field_metadata(field_path, stats, placement_info, analyzer_stats)
+
+        self.metadata_manager.save_metadata()
+
     # ------------------------------------------------------------------
     # Insert flow
     # ------------------------------------------------------------------
     def _handle_insert(self, schema_id: int, payload: Dict[str, Any], *, execute: bool) -> Dict[str, Any]:
+        if os.getenv("AUTO_EXTEND_SCHEMA", "1").strip().lower() in {"1", "true", "yes", "on"}:
+            self.registry.refresh_schema_with_sample(schema_id, payload)
         plan = self.query_engine.plan_query(
             schema_id,
             {
@@ -153,13 +240,28 @@ class HybridCRUDExecutor:
         sql_plan = plan.get("sql") or {"order": [], "rows": {}, "foreign_keys": {}}
         mongo_plan = plan.get("mongo") or {"collections": {}}
 
+        auto_create_hint = self._auto_create_sql_tables(schema_id)
+
         if not execute:
             return {
                 "plan": plan,
                 "sql": sql_plan,
                 "mongo": mongo_plan,
+                "auto_create_sql": auto_create_hint,
                 "note": "Set execute=true to run inserts against live databases",
             }
+
+        if auto_create_hint.get("attempted") and auto_create_hint.get("errors"):
+            return {
+                "plan": plan,
+                "sql": sql_plan,
+                "mongo": mongo_plan,
+                "auto_create_sql": auto_create_hint,
+                "error": "SQL table auto-creation failed; insert aborted.",
+            }
+
+        if self._transaction_enabled():
+            return self._execute_transactional_insert(sql_plan, mongo_plan)
 
         mysql_result = self._execute_sql_inserts(sql_plan)
         mongo_result = self._execute_mongo_inserts(mongo_plan)
@@ -167,6 +269,111 @@ class HybridCRUDExecutor:
             "sql": mysql_result,
             "mongo": mongo_result,
         }
+
+    def _auto_create_sql_tables(self, schema_id: int) -> Dict[str, Any]:
+        enabled = os.getenv("AUTO_CREATE_SQL_ON_INSERT", "1").strip().lower() in {"1", "true", "yes", "on"}
+        if not enabled:
+            return {"attempted": False, "created": 0, "altered": 0, "errors": []}
+
+        if mysql_connector is None:
+            return {
+                "attempted": True,
+                "created": 0,
+                "altered": 0,
+                "errors": ["mysql-connector-python is not available"],
+            }
+
+        schema = self.registry.get_schema(schema_id)
+        sql_section = (schema.get("storage_strategy") or {}).get("sql", {})
+        commands = sql_section.get("commands", [])
+        tables = sql_section.get("tables", [])
+        if not commands or not tables:
+            return {
+                "attempted": True,
+                "created": 0,
+                "altered": 0,
+                "errors": ["No SQL DDL commands available"],
+            }
+
+        table_names = [table.get("name") for table in tables if table.get("name")]
+        conn = mysql_connector.connect(**self.mysql_config)
+        cursor = conn.cursor()
+        created = 0
+        altered = 0
+        errors: List[str] = []
+        try:
+            existing = set()
+            cursor.execute("SHOW TABLES")
+            for row in cursor.fetchall():
+                existing.add(row[0])
+
+            for table_name, command in zip(table_names, commands):
+                if table_name in existing:
+                    altered += self._ensure_sql_columns(cursor, table_name, tables, errors)
+                    continue
+                try:
+                    cursor.execute(command)
+                    created += 1
+                except Exception as exc:  # pragma: no cover
+                    errors.append(str(exc))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+        return {"attempted": True, "created": created, "altered": altered, "errors": errors}
+
+    def _ensure_sql_columns(
+        self,
+        cursor: Any,
+        table_name: str,
+        tables_meta: List[Dict[str, Any]],
+        errors: List[str],
+    ) -> int:
+        auto_alter = os.getenv("AUTO_ALTER_SQL", "1").strip().lower() in {"1", "true", "yes", "on"}
+        if not auto_alter:
+            return 0
+
+        table_meta = next((table for table in tables_meta if table.get("name") == table_name), None)
+        if not table_meta:
+            return 0
+
+        try:
+            cursor.execute(f"DESCRIBE `{table_name}`")
+            existing_cols = {row[0] for row in cursor.fetchall()}
+        except Exception as exc:  # pragma: no cover
+            errors.append(str(exc))
+            return 0
+
+        altered = 0
+        for column in table_meta.get("columns", []):
+            column_name = column.get("name")
+            if not column_name or column_name in existing_cols:
+                continue
+            definition = self._column_definition_sql(column)
+            if not definition:
+                continue
+            statement = f"ALTER TABLE `{table_name}` ADD COLUMN {definition}"
+            try:
+                cursor.execute(statement)
+                altered += 1
+            except Exception as exc:  # pragma: no cover
+                errors.append(str(exc))
+        return altered
+
+    def _column_definition_sql(self, column: Dict[str, Any]) -> Optional[str]:
+        name = column.get("name")
+        col_type = column.get("type")
+        if not name or not col_type:
+            return None
+        parts = [f"`{name}`", str(col_type)]
+        if not column.get("nullable", True):
+            parts.append("NOT NULL")
+        for constraint in column.get("constraints", []) or []:
+            if constraint.upper() == "PRIMARY KEY":
+                continue
+            parts.append(constraint)
+        return " ".join(parts)
 
     def _plan_sql_inserts(
         self,
@@ -227,13 +434,26 @@ class HybridCRUDExecutor:
             self._assign_nested_value(docs[collection], field_path.split("."), value)
         return {"collections": docs}
 
-    def _execute_sql_inserts(self, plan: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_sql_inserts(
+        self,
+        plan: Dict[str, Any],
+        *,
+        conn: Optional[Any] = None,
+        cursor: Optional[Any] = None,
+        commit: bool = True,
+    ) -> Dict[str, Any]:
         if not plan.get("order"):
             return {"rows_inserted": 0, "details": []}
         if mysql_connector is None:
             raise RuntimeError("mysql-connector-python is not available")
-        conn = mysql_connector.connect(**self.mysql_config)
-        cursor = conn.cursor()
+        created_conn = False
+        created_cursor = False
+        if conn is None:
+            conn = mysql_connector.connect(**self.mysql_config)
+            created_conn = True
+        if cursor is None:
+            cursor = conn.cursor()
+            created_cursor = True
         inserted_keys: Dict[str, List[int]] = {}
         details: List[Dict[str, Any]] = []
         try:
@@ -246,17 +466,20 @@ class HybridCRUDExecutor:
                     if fk_hint:
                         parent_table = fk_hint["parent_table"]
                         parent_column = fk_hint["from_column"]
-                        parent_key = inserted_keys.get(parent_table, [None])[-1]
+                        parent_keys = inserted_keys.get(parent_table) or []
+                        parent_key = parent_keys[-1] if parent_keys else None
                         if parent_key is not None:
                             row_to_insert[parent_column] = parent_key
                     columns = list(row_to_insert.keys())
                     if not columns:
-                        continue
-                    values = [row_to_insert[col] for col in columns]
-                    placeholders = ", ".join(["%s"] * len(columns))
-                    statement = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({placeholders})"
-                    cursor.execute(statement, values)
-                    conn.commit()
+                        statement = f"INSERT INTO {table} () VALUES ()"
+                        values: List[Any] = []
+                        cursor.execute(statement)
+                    else:
+                        values = [row_to_insert[col] for col in columns]
+                        placeholders = ", ".join(["%s"] * len(columns))
+                        statement = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({placeholders})"
+                        cursor.execute(statement, values)
                     inserted_id = cursor.lastrowid
                     inserted_keys[table].append(inserted_id)
                     details.append({
@@ -265,32 +488,47 @@ class HybridCRUDExecutor:
                         "values": values,
                         "inserted_id": inserted_id,
                     })
+            if commit:
+                conn.commit()
         finally:
-            cursor.close()
-            conn.close()
+            if created_cursor:
+                cursor.close()
+            if created_conn:
+                conn.close()
         total_rows = sum(len(v) for v in inserted_keys.values())
         return {"rows_inserted": total_rows, "details": details}
 
-    def _execute_mongo_inserts(self, plan: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_mongo_inserts(
+        self,
+        plan: Dict[str, Any],
+        *,
+        client: Optional[Any] = None,
+        session: Optional[Any] = None,
+    ) -> Dict[str, Any]:
         collections = plan.get("collections") or {}
         if not collections:
             return {"documents_inserted": 0, "details": []}
         if MongoClient is None:
             raise RuntimeError("pymongo is not available")
-        uri = f"mongodb://{self.mongo_config['host']}:{self.mongo_config['port']}/"
-        client = MongoClient(uri)
+        created_client = False
+        if client is None:
+            uri = f"mongodb://{self.mongo_config['host']}:{self.mongo_config['port']}/"
+            client = MongoClient(uri)
+            created_client = True
         db = client[self.mongo_config['database']]
         details: List[Dict[str, Any]] = []
         try:
             for collection, document in collections.items():
-                result = db[collection].insert_one(document)
+                result = db[collection].insert_one(document, session=session)
                 details.append({
                     "collection": collection,
                     "document": document,
                     "inserted_id": str(result.inserted_id),
+                    "raw_id": result.inserted_id,
                 })
         finally:
-            client.close()
+            if created_client:
+                client.close()
         return {"documents_inserted": len(details), "details": details}
 
     # ------------------------------------------------------------------
@@ -343,7 +581,7 @@ class HybridCRUDExecutor:
         cursor = conn.cursor(dictionary=True)
         try:
             statement = sql_plan.get("statement")
-            params = tuple(sql_plan.get("parameters", {}).values())
+            params = sql_plan.get("parameters", [])
             cursor.execute(statement, params)
             rows = cursor.fetchall()
         finally:
@@ -386,6 +624,9 @@ class HybridCRUDExecutor:
         strategy: str,
         execute: bool,
     ) -> Dict[str, Any]:
+        if os.getenv("AUTO_EXTEND_SCHEMA", "1").strip().lower() in {"1", "true", "yes", "on"}:
+            self.registry.refresh_schema_with_sample(schema_id, payload)
+        auto_create_hint = self._auto_create_sql_tables(schema_id)
         update_plan = self.query_engine.plan_query(
             schema_id,
             {
@@ -396,9 +637,22 @@ class HybridCRUDExecutor:
             },
         )
 
+        if not execute:
+            update_plan["auto_create_sql"] = auto_create_hint
+
+        if execute and auto_create_hint.get("attempted") and auto_create_hint.get("errors"):
+            return {
+                "strategy": strategy,
+                "plan": update_plan,
+                "auto_create_sql": auto_create_hint,
+                "error": "SQL table auto-creation failed; update aborted.",
+            }
+
         if strategy == "simple":
             delete_plan = update_plan.get("delete", {})
             insert_plan = update_plan.get("insert", {})
+            if execute and self._transaction_enabled():
+                return self._execute_transactional_simple_update(delete_plan, insert_plan, filters)
             delete_result = self._handle_delete(
                 schema_id,
                 delete_plan.get("filters") or filters,
@@ -413,6 +667,7 @@ class HybridCRUDExecutor:
             return {
                 "strategy": "simple",
                 "plan": update_plan,
+                "auto_create_sql": auto_create_hint,
                 "delete": delete_result,
                 "insert": insert_result,
             }
@@ -426,6 +681,8 @@ class HybridCRUDExecutor:
                 "sql": sql_updates,
                 "mongo": mongo_updates,
             }
+        if self._transaction_enabled():
+            return self._execute_transactional_update(sql_updates, mongo_updates, filters)
         sql_result = self._execute_sql_updates(sql_updates, filters)
         mongo_result = self._execute_mongo_updates(mongo_updates, filters)
         return {
@@ -478,13 +735,27 @@ class HybridCRUDExecutor:
         ]
         return sql_plan, mongo_plan
 
-    def _execute_sql_updates(self, plan: List[Dict[str, Any]], filters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _execute_sql_updates(
+        self,
+        plan: List[Dict[str, Any]],
+        filters: Dict[str, Any],
+        *,
+        conn: Optional[Any] = None,
+        cursor: Optional[Any] = None,
+        commit: bool = True,
+    ) -> List[Dict[str, Any]]:
         if not plan:
             return []
         if mysql_connector is None:
             raise RuntimeError("mysql-connector-python is not available")
-        conn = mysql_connector.connect(**self.mysql_config)
-        cursor = conn.cursor()
+        created_conn = False
+        created_cursor = False
+        if conn is None:
+            conn = mysql_connector.connect(**self.mysql_config)
+            created_conn = True
+        if cursor is None:
+            cursor = conn.cursor()
+            created_cursor = True
         results: List[Dict[str, Any]] = []
         try:
             for item in plan:
@@ -494,15 +765,18 @@ class HybridCRUDExecutor:
                 where_clause = self._build_simple_where(filters)
                 statement = f"UPDATE {table} SET {set_clause} {where_clause['clause']}"
                 cursor.execute(statement, values + where_clause["values"])
-                conn.commit()
                 results.append({
                     "table": table,
                     "statement": statement,
                     "affected": cursor.rowcount,
                 })
+            if commit:
+                conn.commit()
         finally:
-            cursor.close()
-            conn.close()
+            if created_cursor:
+                cursor.close()
+            if created_conn:
+                conn.close()
         return results
 
     def _execute_mongo_updates(self, plan: List[Dict[str, Any]], filters: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -559,6 +833,9 @@ class HybridCRUDExecutor:
                 "note": "Set execute=true to run deletes",
             }
 
+        if self._transaction_enabled():
+            return self._execute_transactional_delete(sql_plan, mongo_plan, effective_filters, strategy)
+
         sql_result = self._execute_sql_deletes(sql_plan, effective_filters)
         mongo_result = self._execute_mongo_deletes(mongo_plan, effective_filters)
         return {
@@ -581,29 +858,46 @@ class HybridCRUDExecutor:
             return {"tables": []}
         return {"tables": [target]}
 
-    def _execute_sql_deletes(self, plan: Dict[str, Any], filters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _execute_sql_deletes(
+        self,
+        plan: Dict[str, Any],
+        filters: Dict[str, Any],
+        *,
+        conn: Optional[Any] = None,
+        cursor: Optional[Any] = None,
+        commit: bool = True,
+    ) -> List[Dict[str, Any]]:
         tables = plan.get("tables") or []
         if not tables:
             return []
         if mysql_connector is None:
             raise RuntimeError("mysql-connector-python is not available")
-        conn = mysql_connector.connect(**self.mysql_config)
-        cursor = conn.cursor()
+        created_conn = False
+        created_cursor = False
+        if conn is None:
+            conn = mysql_connector.connect(**self.mysql_config)
+            created_conn = True
+        if cursor is None:
+            cursor = conn.cursor()
+            created_cursor = True
         results: List[Dict[str, Any]] = []
         where = self._build_simple_where(filters)
         try:
             for table in tables:
                 statement = f"DELETE FROM {table} {where['clause']}"
                 cursor.execute(statement, where["values"])
-                conn.commit()
                 results.append({
                     "table": table,
                     "statement": statement,
                     "deleted": cursor.rowcount,
                 })
+            if commit:
+                conn.commit()
         finally:
-            cursor.close()
-            conn.close()
+            if created_cursor:
+                cursor.close()
+            if created_conn:
+                conn.close()
         return results
 
     def _plan_entity_mongo_delete(self, storage_strategy: Dict[str, Any]) -> Dict[str, Any]:
@@ -640,6 +934,376 @@ class HybridCRUDExecutor:
         return results
 
     # ------------------------------------------------------------------
+    # Transaction coordination
+    # ------------------------------------------------------------------
+    def _transaction_enabled(self) -> bool:
+        return os.getenv("TRANSACTION_COORDINATION", "1").strip().lower() in {"1", "true", "yes", "on"}
+
+    def _execute_transactional_insert(self, sql_plan: Dict[str, Any], mongo_plan: Dict[str, Any]) -> Dict[str, Any]:
+        if mysql_connector is None:
+            raise RuntimeError("mysql-connector-python is not available")
+        sql_conn = mysql_connector.connect(**self.mysql_config)
+        sql_cursor = sql_conn.cursor()
+        sql_conn.start_transaction()
+
+        mongo_client = None
+        mongo_session = None
+        mongo_in_txn = False
+        mongo_result: Dict[str, Any] = {"documents_inserted": 0, "details": []}
+
+        try:
+            if mongo_plan.get("collections"):
+                mongo_client = self._create_mongo_client()
+                mongo_session, mongo_in_txn = self._start_mongo_transaction(mongo_client)
+
+            sql_result = self._execute_sql_inserts(sql_plan, conn=sql_conn, cursor=sql_cursor, commit=False)
+            if mongo_plan.get("collections"):
+                mongo_result = self._execute_mongo_inserts(
+                    mongo_plan,
+                    client=mongo_client,
+                    session=mongo_session,
+                )
+
+            if mongo_in_txn and mongo_session is not None:
+                mongo_session.commit_transaction()
+            sql_conn.commit()
+        except Exception:
+            sql_conn.rollback()
+            if mongo_in_txn and mongo_session is not None:
+                self._safe_abort_mongo_transaction(mongo_session)
+            else:
+                self._rollback_mongo_inserts(mongo_client, mongo_result)
+            raise
+        finally:
+            if mongo_session is not None:
+                mongo_session.end_session()
+            if mongo_client is not None:
+                mongo_client.close()
+            sql_cursor.close()
+            sql_conn.close()
+
+        return {"sql": sql_result, "mongo": mongo_result}
+
+    def _execute_transactional_update(
+        self,
+        sql_plan: List[Dict[str, Any]],
+        mongo_plan: List[Dict[str, Any]],
+        filters: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        if mysql_connector is None:
+            raise RuntimeError("mysql-connector-python is not available")
+        sql_conn = mysql_connector.connect(**self.mysql_config)
+        sql_cursor = sql_conn.cursor()
+        sql_conn.start_transaction()
+
+        mongo_client = None
+        mongo_session = None
+        mongo_in_txn = False
+        mongo_backups: List[Dict[str, Any]] = []
+        mongo_result: List[Dict[str, Any]] = []
+
+        try:
+            if mongo_plan:
+                mongo_client = self._create_mongo_client()
+                mongo_session, mongo_in_txn = self._start_mongo_transaction(mongo_client)
+
+            sql_result = self._execute_sql_updates(sql_plan, filters, conn=sql_conn, cursor=sql_cursor, commit=False)
+            if mongo_plan:
+                mongo_result, mongo_backups = self._execute_mongo_updates_transactional(
+                    mongo_client,
+                    mongo_plan,
+                    filters,
+                    mongo_session,
+                    mongo_in_txn,
+                )
+
+            if mongo_in_txn and mongo_session is not None:
+                mongo_session.commit_transaction()
+            sql_conn.commit()
+        except Exception:
+            sql_conn.rollback()
+            if mongo_in_txn and mongo_session is not None:
+                self._safe_abort_mongo_transaction(mongo_session)
+            else:
+                self._rollback_mongo_updates(mongo_client, mongo_backups)
+            raise
+        finally:
+            if mongo_session is not None:
+                mongo_session.end_session()
+            if mongo_client is not None:
+                mongo_client.close()
+            sql_cursor.close()
+            sql_conn.close()
+
+        return {
+            "strategy": "advanced",
+            "sql": sql_result,
+            "mongo": mongo_result,
+        }
+
+    def _execute_transactional_delete(
+        self,
+        sql_plan: Dict[str, Any],
+        mongo_plan: Dict[str, Any],
+        filters: Dict[str, Any],
+        strategy: str,
+    ) -> Dict[str, Any]:
+        if mysql_connector is None:
+            raise RuntimeError("mysql-connector-python is not available")
+        sql_conn = mysql_connector.connect(**self.mysql_config)
+        sql_cursor = sql_conn.cursor()
+        sql_conn.start_transaction()
+
+        mongo_client = None
+        mongo_session = None
+        mongo_in_txn = False
+        mongo_backups: List[Dict[str, Any]] = []
+        mongo_result: List[Dict[str, Any]] = []
+
+        try:
+            if mongo_plan.get("collections"):
+                mongo_client = self._create_mongo_client()
+                mongo_session, mongo_in_txn = self._start_mongo_transaction(mongo_client)
+
+            sql_result = self._execute_sql_deletes(sql_plan, filters, conn=sql_conn, cursor=sql_cursor, commit=False)
+            if mongo_plan.get("collections"):
+                mongo_result, mongo_backups = self._execute_mongo_deletes_transactional(
+                    mongo_client,
+                    mongo_plan,
+                    filters,
+                    mongo_session,
+                    mongo_in_txn,
+                )
+
+            if mongo_in_txn and mongo_session is not None:
+                mongo_session.commit_transaction()
+            sql_conn.commit()
+        except Exception:
+            sql_conn.rollback()
+            if mongo_in_txn and mongo_session is not None:
+                self._safe_abort_mongo_transaction(mongo_session)
+            else:
+                self._rollback_mongo_deletes(mongo_client, mongo_backups)
+            raise
+        finally:
+            if mongo_session is not None:
+                mongo_session.end_session()
+            if mongo_client is not None:
+                mongo_client.close()
+            sql_cursor.close()
+            sql_conn.close()
+
+        return {
+            "strategy": strategy,
+            "sql": sql_result,
+            "mongo": mongo_result,
+        }
+
+    def _execute_transactional_simple_update(
+        self,
+        delete_plan: Dict[str, Any],
+        insert_plan: Dict[str, Any],
+        filters: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        if mysql_connector is None:
+            raise RuntimeError("mysql-connector-python is not available")
+        sql_conn = mysql_connector.connect(**self.mysql_config)
+        sql_cursor = sql_conn.cursor()
+        sql_conn.start_transaction()
+
+        mongo_client = None
+        mongo_session = None
+        mongo_in_txn = False
+        mongo_backups: List[Dict[str, Any]] = []
+        mongo_delete_result: List[Dict[str, Any]] = []
+        mongo_insert_result: Dict[str, Any] = {"documents_inserted": 0, "details": []}
+
+        sql_delete_plan = delete_plan.get("sql") or {"tables": []}
+        mongo_delete_plan = delete_plan.get("mongo") or {"collections": []}
+        sql_insert_plan = insert_plan.get("sql") or {"order": [], "rows": {}, "foreign_keys": {}}
+        mongo_insert_plan = insert_plan.get("mongo") or {"collections": {}}
+        effective_filters = delete_plan.get("filters") or filters
+
+        try:
+            if mongo_delete_plan.get("collections") or mongo_insert_plan.get("collections"):
+                mongo_client = self._create_mongo_client()
+                mongo_session, mongo_in_txn = self._start_mongo_transaction(mongo_client)
+
+            sql_delete_result = self._execute_sql_deletes(
+                sql_delete_plan,
+                effective_filters,
+                conn=sql_conn,
+                cursor=sql_cursor,
+                commit=False,
+            )
+            if mongo_delete_plan.get("collections"):
+                mongo_delete_result, mongo_backups = self._execute_mongo_deletes_transactional(
+                    mongo_client,
+                    mongo_delete_plan,
+                    effective_filters,
+                    mongo_session,
+                    mongo_in_txn,
+                )
+
+            sql_insert_result = self._execute_sql_inserts(
+                sql_insert_plan,
+                conn=sql_conn,
+                cursor=sql_cursor,
+                commit=False,
+            )
+            if mongo_insert_plan.get("collections"):
+                mongo_insert_result = self._execute_mongo_inserts(
+                    mongo_insert_plan,
+                    client=mongo_client,
+                    session=mongo_session,
+                )
+
+            if mongo_in_txn and mongo_session is not None:
+                mongo_session.commit_transaction()
+            sql_conn.commit()
+        except Exception:
+            sql_conn.rollback()
+            if mongo_in_txn and mongo_session is not None:
+                self._safe_abort_mongo_transaction(mongo_session)
+            else:
+                self._rollback_mongo_inserts(mongo_client, mongo_insert_result)
+                self._rollback_mongo_deletes(mongo_client, mongo_backups)
+            raise
+        finally:
+            if mongo_session is not None:
+                mongo_session.end_session()
+            if mongo_client is not None:
+                mongo_client.close()
+            sql_cursor.close()
+            sql_conn.close()
+
+        return {
+            "strategy": "simple",
+            "delete": {"sql": sql_delete_result, "mongo": mongo_delete_result},
+            "insert": {"sql": sql_insert_result, "mongo": mongo_insert_result},
+        }
+
+    def _create_mongo_client(self) -> Any:
+        if MongoClient is None:
+            raise RuntimeError("pymongo is not available")
+        uri = f"mongodb://{self.mongo_config['host']}:{self.mongo_config['port']}/"
+        return MongoClient(uri)
+
+    def _start_mongo_transaction(self, client: Any) -> Tuple[Optional[Any], bool]:
+        try:
+            session = client.start_session()
+        except Exception:  # pragma: no cover - depends on runtime
+            return None, False
+        try:
+            session.start_transaction()
+            return session, True
+        except Exception:  # pragma: no cover - depends on runtime
+            session.end_session()
+            return None, False
+
+    def _safe_abort_mongo_transaction(self, session: Any) -> None:
+        try:
+            session.abort_transaction()
+        except Exception:  # pragma: no cover - best effort
+            pass
+
+    def _execute_mongo_updates_transactional(
+        self,
+        client: Any,
+        plan: List[Dict[str, Any]],
+        filters: Dict[str, Any],
+        session: Optional[Any],
+        in_transaction: bool,
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        db = client[self.mongo_config["database"]]
+        results: List[Dict[str, Any]] = []
+        backups: List[Dict[str, Any]] = []
+        for item in plan:
+            collection = item["collection"]
+            update_doc = {"$set": dict(item.get("set", {}))}
+            if not in_transaction:
+                snapshot = list(db[collection].find(filters or {}))
+                backups.append({"collection": collection, "filters": filters, "docs": snapshot})
+            result = db[collection].update_many(filters or {}, update_doc, session=session)
+            results.append({
+                "collection": collection,
+                "matched": result.matched_count,
+                "modified": result.modified_count,
+            })
+        return results, backups
+
+    def _execute_mongo_deletes_transactional(
+        self,
+        client: Any,
+        plan: Dict[str, Any],
+        filters: Dict[str, Any],
+        session: Optional[Any],
+        in_transaction: bool,
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        db = client[self.mongo_config["database"]]
+        results: List[Dict[str, Any]] = []
+        backups: List[Dict[str, Any]] = []
+        for collection in plan.get("collections") or []:
+            if not in_transaction:
+                snapshot = list(db[collection].find(filters or {}))
+                backups.append({"collection": collection, "filters": filters, "docs": snapshot})
+            result = db[collection].delete_many(filters or {}, session=session)
+            results.append({
+                "collection": collection,
+                "deleted": result.deleted_count,
+            })
+        return results, backups
+
+    def _rollback_mongo_inserts(self, client: Optional[Any], result: Dict[str, Any]) -> None:
+        if client is None:
+            return
+        details = result.get("details") or []
+        if not details:
+            return
+        db = client[self.mongo_config["database"]]
+        try:
+            from bson import ObjectId  # type: ignore
+        except Exception:  # pragma: no cover - optional dependency
+            ObjectId = None  # type: ignore
+        for item in details:
+            collection = item.get("collection")
+            raw_id = item.get("raw_id") or item.get("inserted_id")
+            if not collection or raw_id is None:
+                continue
+            identifier = raw_id
+            if ObjectId is not None and isinstance(raw_id, str):
+                try:
+                    identifier = ObjectId(raw_id)
+                except Exception:
+                    identifier = raw_id
+            db[collection].delete_one({"_id": identifier})
+
+    def _rollback_mongo_updates(self, client: Optional[Any], backups: List[Dict[str, Any]]) -> None:
+        if client is None or not backups:
+            return
+        db = client[self.mongo_config["database"]]
+        for backup in backups:
+            collection = backup.get("collection")
+            docs = backup.get("docs") or []
+            filters = backup.get("filters") or {}
+            if not collection:
+                continue
+            db[collection].delete_many(filters)
+            if docs:
+                db[collection].insert_many(docs)
+
+    def _rollback_mongo_deletes(self, client: Optional[Any], backups: List[Dict[str, Any]]) -> None:
+        if client is None or not backups:
+            return
+        db = client[self.mongo_config["database"]]
+        for backup in backups:
+            collection = backup.get("collection")
+            docs = backup.get("docs") or []
+            if not collection or not docs:
+                continue
+            db[collection].insert_many(docs)
+
+    # ------------------------------------------------------------------
     # Helper utilities
     # ------------------------------------------------------------------
     def _group_mappings_by_table(self, mappings: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
@@ -654,7 +1318,11 @@ class HybridCRUDExecutor:
     def _find_anchor_path(self, table: Optional[Dict[str, Any]]) -> Optional[str]:
         if not table:
             return None
-        for source in table.get("sources", []):
+        table_name = table.get("name")
+        sources = table.get("sources", [])
+        if table_name and table_name in sources:
+            return table_name
+        for source in sources:
             if source and "." not in source:
                 return source
         return None

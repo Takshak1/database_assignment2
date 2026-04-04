@@ -419,12 +419,12 @@ class CRUDQueryEngine:
         self,
         filters: Dict[str, Any],
         field_map: Dict[str, List[Dict[str, Any]]],
-    ) -> Tuple[Optional[str], Dict[str, Any]]:
+    ) -> Tuple[Optional[str], List[Any]]:
         if not filters:
-            return None, {}
+            return None, []
 
         clauses: List[str] = []
-        parameters: Dict[str, Any] = {}
+        parameters: List[Any] = []
         for raw_field, value in filters.items():
             entries = field_map.get(raw_field.lower())
             if not entries:
@@ -434,9 +434,8 @@ class CRUDQueryEngine:
             column = chosen.get("column")
             if not table or not column:
                 continue
-            param_name = f"param_{len(parameters) + 1}"
-            clauses.append(f"{table}.{column} = :{param_name}")
-            parameters[param_name] = value
+            clauses.append(f"{table}.{column} = %s")
+            parameters.append(value)
 
         return (" AND ".join(clauses) if clauses else None, parameters)
 
@@ -799,7 +798,11 @@ class CRUDQueryEngine:
     def _find_anchor_path(self, table: Optional[Dict[str, Any]]) -> Optional[str]:
         if not table:
             return None
-        for source in table.get("sources", []):
+        table_name = table.get("name")
+        sources = table.get("sources", [])
+        if table_name and table_name in sources:
+            return table_name
+        for source in sources:
             if source and "." not in source:
                 return source
         return None

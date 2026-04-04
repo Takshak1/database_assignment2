@@ -66,6 +66,78 @@ Start the dummy JSON API server:
 uvicorn simulation_code:app --reload --port 8000
 ```
 
+---
+
+## Logical Dashboard (CLI)
+
+`logical_dashboard_cli.py` provides a minimal logical dashboard that lists active session
+details, logical entities, logical instances, and logical query results without exposing
+backend-specific storage details.
+
+### Quick start
+
+```bash
+python logical_dashboard_cli.py
+```
+
+### List logical entities
+
+```bash
+python logical_dashboard_cli.py --list-entities
+```
+
+### Show entity details + sample instances
+
+```bash
+python logical_dashboard_cli.py --entity 1
+```
+
+### Run a logical query (dry-run by default)
+
+```bash
+python logical_dashboard_cli.py --query 1 --fields "username,comments" --limit 5
+```
+
+### Execute against live backends
+
+```bash
+python logical_dashboard_cli.py --query 1 --fields "username,comments" --limit 5 --execute
+```
+
+Environment options:
+
+- `SCHEMA_REGISTRY_DB` (default: `schema_registry.db`)
+- `METADATA_FILE` (default: `metadata.json`)
+- `DASHBOARD_EXECUTE=1` to default queries to execute mode
+
+---
+
+## Logical Dashboard (Web)
+
+`dashboard_web.py` serves a local-hosted web dashboard for logical entities and queries.
+It hides backend-specific details and exposes only logical results.
+
+```bash
+uvicorn dashboard_web:app --reload --port 8003
+```
+
+Open in a browser: `http://127.0.0.1:8003`
+
+Dashboard pages:
+
+- Home: session summary
+- Entities: logical schema list
+- CRUD: insert/update/delete/read forms with logical summaries
+- ACID Report: current backend data snapshot + integrity checks
+- Test Connection: MySQL/Mongo connectivity status
+- Query History: recent logical requests
+
+Environment options:
+
+- `SCHEMA_REGISTRY_DB` (default: `schema_registry.db`)
+- `METADATA_FILE` (default: `metadata.json`)
+- `DASHBOARD_EXECUTE=1` to default queries to execute mode
+
 <<<<<<< HEAD
 ## Schema Registry API
 
@@ -100,6 +172,67 @@ curl http://localhost:8002/schemas/1
 ```
 
 Each schema is stored in `schema_registry.db` with entries in `schemas` and `fields` tables so you always have a registry describing every field.
+
+### Auto-create SQL tables
+
+By default, the registry now attempts to auto-create SQL tables using the generated DDL during schema registration. 
+Disable it by setting:
+
+```bash
+AUTO_CREATE_SQL=0
+```
+
+### Auto-create Mongo collections
+
+Mongo collections can be auto-provisioned during schema registration. Disable with:
+
+```bash
+AUTO_CREATE_MONGO=0
+```
+
+### Reset registry metadata
+
+Use the reset endpoint to wipe `schema_registry.db` (only when safe):
+
+```bash
+POST /reset_registry
+```
+
+### Auto-create SQL on insert
+
+Insert execution attempts to create missing SQL tables before writes. Disable with:
+
+```bash
+AUTO_CREATE_SQL_ON_INSERT=0
+```
+
+If a table already exists, missing columns can be auto-added during inserts.
+Disable column auto-alter with:
+
+```bash
+AUTO_ALTER_SQL=0
+```
+
+### Transaction coordination
+
+CRUD write operations are executed as a single logical transaction across SQL + Mongo.
+This attempts SQL transactions and Mongo transactions when supported, with compensating
+rollbacks if Mongo is not running as a replica set.
+Disable transaction coordination with:
+
+```bash
+TRANSACTION_COORDINATION=0
+```
+
+### Auto-extend schema from payloads
+
+When enabled, inserts/updates will extend the registered schema with new fields
+found in the payload and regenerate blueprints/strategies before execution.
+Disable with:
+
+```bash
+AUTO_EXTEND_SCHEMA=0
+```
 
 ### Step 3 — JSON Structure Analyzer
 
@@ -243,6 +376,12 @@ curl -X POST http://localhost:8002/ingest/1 `
 ```powershell
 python buffer_promoter.py --schema-id 1 --limit 25           # dry-run (plan only)
 python buffer_promoter.py --schema-id 1 --limit 25 --execute  # run live CRUD updates
+
+To auto-create a new entity using the most frequent buffered field:
+
+```bash
+python buffer_promoter.py --auto-entity --limit 200 --min-count 3
+```
 ```
 
 The promoter inspects pending entries, skips anything still marked `buffer`, and for ready fields reissues an `update` (delete + insert) through `HybridCRUDExecutor`. On success the queue item is marked `processed`, keeping Pipeline 1 compliant with the assignment requirement of “until enough information is available.”
@@ -304,7 +443,39 @@ curl -X POST http://localhost:8002/schemas/1/crud \
 			}'
 ```
 
+If you only have a raw JSON payload and want the system to register the entity automatically,
+use the auto CRUD endpoint:
+
+```bash
+curl -X POST http://localhost:8002/crud_auto \
+	-H "Content-Type: application/json" \
+	-d '{
+		"entity": "user_activity",
+		"operation": "insert",
+		"payload": {"username": "alice", "post_id": 10, "comments": [{"text": "nice"}]},
+		"execute": true
+	}'
+```
+
 `execute=false` (default) returns a plan so you can inspect the SQL inserts, Mongo docs, or DELETE cascade without touching the databases. Flip it to `true` in production to run the statements directly using the configured MySQL/Mongo credentials.
+
+### University dataset ingest
+
+`university_ingest.py` splits `university_data.json` into logical entities so you don't end up with a
+single `university` field and no columns. It inserts `university`, `department`, `program`,
+`faculty_member`, `student`, `course`, and `placement` records through `/crud_auto`.
+
+Dry-run (inspect planned inserts):
+
+```bash
+python university_ingest.py --file university_data.json
+```
+
+Execute inserts:
+
+```bash
+python university_ingest.py --file university_data.json --execute
+```
 
 Supported operations:
 

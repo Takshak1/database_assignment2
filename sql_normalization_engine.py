@@ -189,11 +189,14 @@ class SQLNormalizationEngine:
             return None
 
         parent_pk = parent["primary_key"]
+        parent_pk_type = parent["columns"].get(parent_pk, {}).get("type", "BIGINT")
+        if isinstance(parent_pk_type, str) and parent_pk_type.upper().startswith("SERIAL"):
+            parent_pk_type = "BIGINT UNSIGNED"
         fk_name = self._foreign_key_name(parent_table)
         if fk_name not in child["columns"]:
             child["columns"][fk_name] = {
                 "name": fk_name,
-                "type": "BIGINT",
+                "type": parent_pk_type,
                 "nullable": False,
                 "constraints": [],
                 "source": None,

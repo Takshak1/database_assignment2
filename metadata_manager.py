@@ -15,7 +15,12 @@ class MetadataManager:
         try:
             with open(self.metadata_file, 'r') as f:
                 data = json.load(f)
-                
+
+                if not data:
+                    self.field_metadata = {}
+                    print("Metadata file is empty - starting with empty metadata")
+                    return
+
                 if isinstance(list(data.values())[0], str):
                     print(f"Converting simple metadata to enhanced format...")
                     self._convert_simple_to_enhanced(data)
@@ -229,6 +234,63 @@ class MetadataManager:
             stats,
             metadata
         )
+
+    def mark_entity_from_buffer(
+        self,
+        field_path: str,
+        *,
+        entity_name: str,
+        frequency: int,
+        reason: str = "buffer_frequency",
+    ) -> None:
+        current_time = datetime.datetime.now().isoformat()
+        metadata = self._ensure_metadata_entry(field_path, current_time)
+        metadata["last_updated"] = current_time
+        metadata["placement_decision"] = "sql"
+        metadata.setdefault("data_profile", {})
+        metadata["data_profile"]["frequency"] = frequency
+        metadata["data_profile"].setdefault("total_records", frequency)
+        metadata["placement_reasoning"] = {
+            "reason": reason,
+            "confidence": 1.0,
+            "decision_factors": {"buffer_frequency": frequency, "entity": entity_name},
+            "override_applied": False,
+            "manual_review_needed": False,
+        }
+        metadata["structural_profile"] = {
+            "field": field_path,
+            "field_path": field_path,
+            "canonical_name": self._to_identifier(field_path),
+            "data_type": metadata.get("type_analysis", {}).get("primary_type", "unknown"),
+            "nest_level": self._derive_nesting_level(field_path, {}),
+            "parent": self._derive_parent_field(field_path),
+            "storage": "SQL",
+            "storage_engine": "sql",
+            "table_or_collection": self._to_identifier(entity_name),
+            "foreign_key": None,
+            "key_relationships": {"primary_key": None, "foreign_keys": []},
+            "is_array": True,
+        }
+
+    def _ensure_metadata_entry(self, field_name: str, current_time: str) -> Dict[str, Any]:
+        if field_name in self.field_metadata:
+            return self.field_metadata[field_name]
+        self.field_metadata[field_name] = {
+            "creation_timestamp": current_time,
+            "field_name": field_name,
+            "placement_decision": None,
+            "data_profile": {},
+            "type_analysis": {},
+            "semantic_analysis": {},
+            "placement_reasoning": {},
+            "drift_tracking": {},
+            "quality_metrics": {},
+            "usage_statistics": {},
+            "schema_evolution": [],
+            "business_context": {},
+            "last_updated": current_time,
+        }
+        return self.field_metadata[field_name]
     
     def _determine_primary_type(self, types: Set) -> str:
         if not types:
