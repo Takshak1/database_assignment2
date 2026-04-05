@@ -522,7 +522,7 @@
     "field_name": "name",
     "placement_decision": "sql",
     "data_profile": {
-      "total_records": 8.0,
+      "total_records": 11.0,
       "frequency": 1.0,
       "unique_count": 0,
       "uniqueness_ratio": 0.0,
@@ -558,7 +558,7 @@
       "confidence": 0.88,
       "decision_factors": {
         "source": "schema_registry",
-        "schema_id": 4
+        "schema_id": 6
       },
       "override_applied": false,
       "manual_review_needed": false
@@ -598,7 +598,7 @@
         "CCPA"
       ]
     },
-    "last_updated": "2026-04-05T13:18:06.177938",
+    "last_updated": "2026-04-05T16:25:17.899024",
     "structural_profile": {
       "field": "name",
       "field_path": "name",
@@ -937,7 +937,7 @@
     "field_name": "university_id",
     "placement_decision": "sql",
     "data_profile": {
-      "total_records": 8.0,
+      "total_records": 11.0,
       "frequency": 1.0,
       "unique_count": 0,
       "uniqueness_ratio": 0.0,
@@ -973,7 +973,7 @@
       "confidence": 0.88,
       "decision_factors": {
         "source": "schema_registry",
-        "schema_id": 4
+        "schema_id": 6
       },
       "override_applied": false,
       "manual_review_needed": false
@@ -1010,7 +1010,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:18:06.177938",
+    "last_updated": "2026-04-05T16:25:17.900369",
     "structural_profile": {
       "field": "university_id",
       "field_path": "university_id",
@@ -1870,7 +1870,7 @@
     "field_name": "dept_id",
     "placement_decision": "sql",
     "data_profile": {
-      "total_records": 8.0,
+      "total_records": 11.0,
       "frequency": 1.0,
       "unique_count": 0,
       "uniqueness_ratio": 0.0,
@@ -1906,7 +1906,7 @@
       "confidence": 0.88,
       "decision_factors": {
         "source": "schema_registry",
-        "schema_id": 4
+        "schema_id": 6
       },
       "override_applied": false,
       "manual_review_needed": false
@@ -1943,7 +1943,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:18:06.176938",
+    "last_updated": "2026-04-05T16:25:17.897503",
     "structural_profile": {
       "field": "dept_id",
       "field_path": "dept_id",
@@ -2979,7 +2979,7 @@
         "CCPA"
       ]
     },
-    "last_updated": "2026-04-05T13:17:59.358966",
+    "last_updated": "2026-04-05T16:25:17.897503",
     "structural_profile": {
       "field": "email",
       "field_path": "email",
@@ -3597,7 +3597,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:17:59.359955",
+    "last_updated": "2026-04-05T16:25:17.900369",
     "structural_profile": {
       "field": "status",
       "field_path": "status",
@@ -8664,7 +8664,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:16:11.227054",
+    "last_updated": "2026-04-05T14:22:29.243036",
     "structural_profile": {
       "field": "avg_package_usd",
       "field_path": "avg_package_usd",
@@ -8767,7 +8767,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:16:11.227054",
+    "last_updated": "2026-04-05T14:22:29.243036",
     "structural_profile": {
       "field": "placed",
       "field_path": "placed",
@@ -8870,7 +8870,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:16:11.228055",
+    "last_updated": "2026-04-05T14:22:29.243036",
     "structural_profile": {
       "field": "placement_rate_percent",
       "field_path": "placement_rate_percent",
@@ -8973,7 +8973,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:16:11.228055",
+    "last_updated": "2026-04-05T14:22:29.244041",
     "structural_profile": {
       "field": "top_recruiters",
       "field_path": "top_recruiters",
@@ -9076,7 +9076,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:16:11.228055",
+    "last_updated": "2026-04-05T14:22:29.244041",
     "structural_profile": {
       "field": "total_eligible",
       "field_path": "total_eligible",
@@ -9179,7 +9179,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:17:59.364691",
+    "last_updated": "2026-04-05T16:25:17.900369",
     "structural_profile": {
       "field": "year",
       "field_path": "year",
@@ -9488,7 +9488,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:17:59.357959",
+    "last_updated": "2026-04-05T16:25:17.897503",
     "structural_profile": {
       "field": "cgpa",
       "field_path": "cgpa",
@@ -9591,7 +9591,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:17:59.358966",
+    "last_updated": "2026-04-05T16:25:17.899024",
     "structural_profile": {
       "field": "fees_status",
       "field_path": "fees_status",
@@ -9621,7 +9621,7 @@
     "field_name": "program_id",
     "placement_decision": "sql",
     "data_profile": {
-      "total_records": 8.0,
+      "total_records": 11.0,
       "frequency": 1.0,
       "unique_count": 0,
       "uniqueness_ratio": 0.0,
@@ -9657,7 +9657,7 @@
       "confidence": 0.88,
       "decision_factors": {
         "source": "schema_registry",
-        "schema_id": 4
+        "schema_id": 6
       },
       "override_applied": false,
       "manual_review_needed": false
@@ -9694,7 +9694,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:18:06.177938",
+    "last_updated": "2026-04-05T16:25:17.899024",
     "structural_profile": {
       "field": "program_id",
       "field_path": "program_id",
@@ -9735,12 +9735,12 @@
     },
     "type_analysis": {
       "detected_types": [
-        "bool"
+        "int"
       ],
       "type_count": 1,
       "has_type_ambiguity": false,
       "ambiguity_score": 0.0,
-      "primary_type": "bool",
+      "primary_type": "int",
       "type_consistency": 1.0
     },
     "semantic_analysis": {
@@ -9797,12 +9797,12 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:17:59.359955",
+    "last_updated": "2026-04-05T16:25:17.899024",
     "structural_profile": {
       "field": "scholarship",
       "field_path": "scholarship",
       "canonical_name": "scholarship",
-      "data_type": "bool",
+      "data_type": "int",
       "nest_level": 0,
       "parent": null,
       "storage": "SQL",
@@ -9900,7 +9900,7 @@
       "retention_policy": "indefinite",
       "compliance_tags": []
     },
-    "last_updated": "2026-04-05T13:17:59.359955",
+    "last_updated": "2026-04-05T16:25:17.900369",
     "structural_profile": {
       "field": "student_id",
       "field_path": "student_id",

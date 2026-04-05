@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -167,6 +168,13 @@ def _sql_fk_violations() -> Dict[str, Any]:
         conn = mysql_connector.connect(**executor.mysql_config)
         cursor = conn.cursor()
         violations: List[Dict[str, Any]] = []
+        skipped_relations: List[Dict[str, Any]] = []
+        cursor.execute("SHOW TABLES")
+        existing_tables = {
+            _normalize_table_lookup_name(row[0])
+            for row in cursor.fetchall()
+            if row and row[0] is not None
+        }
         for schema in registry.list_schemas():
             detail = registry.get_schema(schema["schema_id"])
             blueprint = detail.get("sql_blueprint") or detail.get("analysis", {}).get("sql_blueprint")
@@ -178,6 +186,15 @@ def _sql_fk_violations() -> Dict[str, Any]:
                 child_col = relation.get("from_column")
                 parent_col = relation.get("to_column")
                 if not all([child, parent, child_col, parent_col]):
+                    continue
+                if not _is_sql_table_available(existing_tables, child) or not _is_sql_table_available(existing_tables, parent):
+                    skipped_relations.append({
+                        "child_table": child,
+                        "parent_table": parent,
+                        "child_column": child_col,
+                        "parent_column": parent_col,
+                        "reason": "skipped_missing_table",
+                    })
                     continue
                 statement = _build_fk_violation_statement(child, parent, child_col, parent_col)
                 cursor.execute(statement)
@@ -193,9 +210,28 @@ def _sql_fk_violations() -> Dict[str, Any]:
         cursor.close()
         conn.close()
         total_missing = sum(item["missing_parent"] for item in violations)
-        return {"ok": True, "violations": violations, "total_missing": total_missing}
+        return {
+            "ok": True,
+            "violations": violations,
+            "total_missing": total_missing,
+            "skipped_relations": skipped_relations,
+        }
     except Exception as exc:  # pragma: no cover
         return {"ok": False, "error": str(exc)}
+
+
+def _normalize_table_lookup_name(name: Any) -> str:
+    value = str(name or "").strip().strip("`")
+    if "." in value:
+        value = value.split(".")[-1]
+    return value.lower()
+
+
+def _is_sql_table_available(existing_tables: set[str], table_name: Any) -> bool:
+    if not existing_tables:
+        return False
+    normalized = _normalize_table_lookup_name(table_name)
+    return bool(normalized) and normalized in existing_tables
 
 
 def _quote_mysql_identifier(name: Any) -> str:
@@ -303,8 +339,8 @@ def _summarize_write(details: Dict[str, Any]) -> Dict[str, Any]:
 
 def _plan_summary(plan: Dict[str, Any]) -> Dict[str, Any]:
     field_locations = plan.get("field_locations") or []
-    resolved = [loc for loc in field_locations if loc.get("status") == "resolved"]
-    missing = [loc for loc in field_locations if loc.get("status") != "resolved"]
+    resolved = [loc for loc in field_locations if _is_field_status_resolved(loc.get("status"))]
+    missing = [loc for loc in field_locations if loc.get("status") == "missing"]
     sql_fields = [loc.get("requested") for loc in resolved if loc.get("storage") == "sql"]
     mongo_fields = [loc.get("requested") for loc in resolved if loc.get("storage") == "mongo"]
     sql_required = bool(plan.get("sql")) or bool(sql_fields)
@@ -360,7 +396,11 @@ def _logical_plan_view(plan: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     sql_fields = [loc.get("requested") for loc in field_locations if loc.get("storage") == "sql" and loc.get("requested")]
     mongo_fields = [loc.get("requested") for loc in field_locations if loc.get("storage") == "mongo" and loc.get("requested")]
     buffer_fields = [loc.get("requested") for loc in field_locations if loc.get("storage") == "buffer" and loc.get("requested")]
-    missing_fields = [loc.get("requested") for loc in field_locations if loc.get("status") != "resolved" and loc.get("requested")]
+    missing_fields = [
+        loc.get("requested")
+        for loc in field_locations
+        if loc.get("status") == "missing" and loc.get("requested")
+    ]
 
     merge_key = None
     merge_plan = plan.get("merge")
@@ -424,6 +464,69 @@ def _backend_operations(details: Dict[str, Any]) -> Dict[str, Any]:
     return ops
 
 
+def _is_field_status_resolved(status: Any) -> bool:
+    return str(status or "").strip().lower() in {"resolved", "hint"}
+
+
+def _describe_sql_zero_match_reason(details: Dict[str, Any]) -> Optional[str]:
+    if mysql_connector is None or not isinstance(details, dict):
+        return None
+
+    result_summary = details.get("result_summary") if isinstance(details.get("result_summary"), dict) else {}
+    sql_rows = int(result_summary.get("sql_rows", 0) or 0)
+    if sql_rows != 0:
+        return None
+
+    sql_plan = details.get("sql") if isinstance(details.get("sql"), dict) else None
+    if not sql_plan:
+        return None
+
+    where_clause = str(sql_plan.get("where") or "")
+    parameters = sql_plan.get("parameters") or []
+    if not where_clause or not parameters:
+        return None
+
+    match = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*%s", where_clause)
+    if not match:
+        return None
+
+    table_name, column_name = match.group(1), match.group(2)
+    filter_value = parameters[0]
+    if not isinstance(filter_value, str) or not any(ch.isalpha() for ch in filter_value):
+        return None
+
+    conn = None
+    cursor = None
+    try:
+        conn = mysql_connector.connect(**executor.mysql_config)
+        cursor = conn.cursor()
+        cursor.execute(f"SHOW COLUMNS FROM {table_name} LIKE %s", (column_name,))
+        column_info = cursor.fetchone()
+        if not column_info or len(column_info) < 2:
+            return None
+
+        column_type = str(column_info[1]).lower()
+        numeric_markers = ("int", "decimal", "double", "float", "numeric")
+        if not any(marker in column_type for marker in numeric_markers):
+            return None
+
+        cursor.execute(f"SELECT {column_name} FROM {table_name} ORDER BY {column_name} LIMIT 5")
+        sample_values = [str(row[0]) for row in cursor.fetchall() if row and row[0] is not None]
+        sample_note = f" Sample {column_name} values: {', '.join(sample_values)}." if sample_values else ""
+        return (
+            f"No SQL rows matched: filter '{column_name}={filter_value}' appears to be an external ID, "
+            f"but `{table_name}.{column_name}` stores numeric keys ({column_type})."
+            f"{sample_note}"
+        )
+    except Exception:
+        return None
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+
 def _build_empty_read_reason(details: Dict[str, Any]) -> str:
     if not isinstance(details, dict):
         return "No logical results returned."
@@ -456,6 +559,9 @@ def _build_empty_read_reason(details: Dict[str, Any]) -> str:
     if uses_sql and uses_mongo and sql_rows == 0 and mongo_documents == 0:
         return "No SQL rows or Mongo documents matched the current filters."
     if uses_sql and not uses_mongo and sql_rows == 0:
+        sql_hint = _describe_sql_zero_match_reason(details)
+        if sql_hint:
+            return sql_hint
         return "No SQL rows matched the current filters."
     if uses_mongo and not uses_sql and mongo_documents == 0:
         return "No Mongo documents matched the current filters."
@@ -469,7 +575,7 @@ def _build_empty_read_reason(details: Dict[str, Any]) -> str:
 def _format_field_chips(items: List[str]) -> str:
     if not items:
         return "<span class='muted'>None</span>"
-    return "".join(f"<span class='chip'>{_safe(item)}</span>" for item in items)
+    return " ".join(f"<span class='chip'>{_safe(item)}</span>" for item in items)
 
 
 def _render_query_explainability(record: QueryRecord) -> str:

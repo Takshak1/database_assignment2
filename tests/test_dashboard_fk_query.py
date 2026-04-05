@@ -72,3 +72,15 @@ def test_fk_query_quotes_mysql_identifiers() -> None:
     assert "`student-record`" in statement
     assert "child_tbl.`advisor``id`" in statement
     assert "parent_tbl.`university id`" in statement
+
+
+def test_table_name_normalization_handles_db_prefix_and_case() -> None:
+    assert dashboard_web._normalize_table_lookup_name("streaming_db.departments") == "departments"
+    assert dashboard_web._normalize_table_lookup_name("`University`") == "university"
+
+
+def test_table_availability_checks_normalized_names() -> None:
+    existing = {"university", "placement"}
+    assert dashboard_web._is_sql_table_available(existing, "streaming_db.university")
+    assert dashboard_web._is_sql_table_available(existing, "`PLACEMENT`")
+    assert not dashboard_web._is_sql_table_available(existing, "departments")

@@ -559,6 +559,7 @@ class HybridCRUDExecutor:
             return plan
 
         sql_rows = self._execute_sql_select(plan["sql"]) if plan.get("sql") else []
+        sql_rows = self._normalize_read_sql_rows(sql_rows, plan.get("field_locations") or [])
         mongo_rows = self._execute_mongo_reads(plan.get("mongo", [])) if plan.get("mongo") else []
         merged = self.aggregator.aggregate(
             schema_id,
@@ -573,6 +574,44 @@ class HybridCRUDExecutor:
             "merged_items": len(merged),
         }
         return plan
+
+    def _normalize_read_sql_rows(
+        self,
+        rows: List[Dict[str, Any]],
+        field_locations: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        if not rows or not field_locations:
+            return rows
+
+        alias_to_requested: Dict[str, str] = {}
+        for loc in field_locations:
+            if str(loc.get("storage") or "").lower() != "sql":
+                continue
+            requested = loc.get("requested")
+            table = loc.get("table")
+            column = loc.get("column")
+            if not requested or not table or not column:
+                continue
+            alias_to_requested[f"{table}_{column}".lower()] = str(requested)
+
+        if not alias_to_requested:
+            return rows
+
+        normalized_rows: List[Dict[str, Any]] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                normalized_rows.append(row)
+                continue
+            normalized = dict(row)
+            for key in list(row.keys()):
+                requested = alias_to_requested.get(str(key).lower())
+                if not requested:
+                    continue
+                if requested not in normalized:
+                    normalized[requested] = row[key]
+                normalized.pop(key, None)
+            normalized_rows.append(normalized)
+        return normalized_rows
 
     def _execute_sql_select(self, sql_plan: Dict[str, Any]) -> List[Dict[str, Any]]:
         if not sql_plan:
@@ -623,6 +662,17 @@ class HybridCRUDExecutor:
         strategy: str,
         execute: bool,
     ) -> Dict[str, Any]:
+        if (
+            execute
+            and (strategy or "simple").lower() == "simple"
+            and not filters
+            and not self._allow_unfiltered_destructive_writes()
+        ):
+            raise ValueError(
+                "Refused unfiltered simple update: this mode can delete and recreate all entity rows. "
+                "Provide filters or set ALLOW_UNFILTERED_DESTRUCTIVE_WRITES=1 to override."
+            )
+
         if os.getenv("AUTO_EXTEND_SCHEMA", "1").strip().lower() in {"1", "true", "yes", "on"}:
             self.registry.refresh_schema_with_sample(schema_id, payload)
         auto_create_hint = self._auto_create_sql_tables(schema_id)
@@ -646,6 +696,47 @@ class HybridCRUDExecutor:
                 "auto_create_sql": auto_create_hint,
                 "error": "SQL table auto-creation failed; update aborted.",
             }
+
+        if strategy == "simple" and payload and filters:
+            advanced_plan = self.query_engine.plan_query(
+                schema_id,
+                {
+                    "operation": "update",
+                    "payload": payload,
+                    "filters": filters,
+                    "strategy": "advanced",
+                },
+            )
+            effective_filters = advanced_plan.get("filters") or filters
+            sql_updates = advanced_plan.get("sql") or []
+            mongo_updates = advanced_plan.get("mongo") or []
+
+            if not execute:
+                return {
+                    "strategy": "simple",
+                    "effective_strategy": "advanced",
+                    "plan": advanced_plan,
+                    "auto_create_sql": auto_create_hint,
+                    "sql": sql_updates,
+                    "mongo": mongo_updates,
+                    "note": "Simple update auto-promoted to targeted update for filtered partial payload.",
+                }
+
+            if self._transaction_enabled():
+                result = self._execute_transactional_update(sql_updates, mongo_updates, effective_filters)
+            else:
+                result = {
+                    "strategy": "advanced",
+                    "sql": self._execute_sql_updates(sql_updates, effective_filters),
+                    "mongo": self._execute_mongo_updates(mongo_updates, effective_filters),
+                }
+
+            result["strategy"] = "simple"
+            result["effective_strategy"] = "advanced"
+            result["plan"] = advanced_plan
+            result["auto_create_sql"] = auto_create_hint
+            result["note"] = "Simple update auto-promoted to targeted update for filtered partial payload."
+            return result
 
         if strategy == "simple":
             delete_plan = update_plan.get("delete", {})
@@ -761,7 +852,20 @@ class HybridCRUDExecutor:
                 table = item["table"]
                 set_clause = ", ".join([f"{col} = %s" for col in item["set"]])
                 values = list(item["set"].values())
-                where_clause = self._build_simple_where(filters)
+                table_columns = self._fetch_table_columns(cursor, table)
+                where_clause = self._build_table_where(filters, table_columns=table_columns)
+                if filters and not where_clause["usable"]:
+                    results.append(
+                        {
+                            "table": table,
+                            "statement": None,
+                            "affected": 0,
+                            "skipped": True,
+                            "reason": "No compatible filters for this table",
+                            "ignored_filters": where_clause["ignored_filters"],
+                        }
+                    )
+                    continue
                 statement = f"UPDATE {table} SET {set_clause} {where_clause['clause']}"
                 cursor.execute(statement, values + where_clause["values"])
                 results.append({
@@ -820,8 +924,20 @@ class HybridCRUDExecutor:
             },
         )
         effective_filters = delete_plan.get("filters") or {}
+        effective_strategy = (delete_plan.get("strategy") or strategy or "").lower()
         sql_plan = delete_plan.get("sql") or {"tables": []}
         mongo_plan = delete_plan.get("mongo") or {"collections": []}
+
+        if (
+            execute
+            and not effective_filters
+            and effective_strategy in {"entity", "simple"}
+            and not self._allow_unfiltered_destructive_writes()
+        ):
+            raise ValueError(
+                "Refused unfiltered delete: this operation would remove all entity rows. "
+                "Provide filters or set ALLOW_UNFILTERED_DESTRUCTIVE_WRITES=1 to override."
+            )
 
         if not execute:
             return {
@@ -880,9 +996,20 @@ class HybridCRUDExecutor:
             cursor = conn.cursor()
             created_cursor = True
         results: List[Dict[str, Any]] = []
-        where = self._build_simple_where(filters)
         try:
             for table in tables:
+                table_columns = self._fetch_table_columns(cursor, table)
+                where = self._build_table_where(filters, table_columns=table_columns)
+                if filters and not where["usable"]:
+                    results.append({
+                        "table": table,
+                        "statement": None,
+                        "deleted": 0,
+                        "skipped": True,
+                        "reason": "No compatible filters for this table",
+                        "ignored_filters": where["ignored_filters"],
+                    })
+                    continue
                 statement = f"DELETE FROM {table} {where['clause']}"
                 cursor.execute(statement, where["values"])
                 results.append({
@@ -937,6 +1064,9 @@ class HybridCRUDExecutor:
     # ------------------------------------------------------------------
     def _transaction_enabled(self) -> bool:
         return os.getenv("TRANSACTION_COORDINATION", "1").strip().lower() in {"1", "true", "yes", "on"}
+
+    def _allow_unfiltered_destructive_writes(self) -> bool:
+        return os.getenv("ALLOW_UNFILTERED_DESTRUCTIVE_WRITES", "0").strip().lower() in {"1", "true", "yes", "on"}
 
     def _execute_transactional_insert(self, sql_plan: Dict[str, Any], mongo_plan: Dict[str, Any]) -> Dict[str, Any]:
         if mysql_connector is None:
@@ -1431,6 +1561,46 @@ class HybridCRUDExecutor:
             values.append(value)
         clause = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         return {"clause": clause, "values": values}
+
+    def _build_table_where(
+        self,
+        filters: Dict[str, Any],
+        *,
+        table_columns: Optional[set[str]] = None,
+    ) -> Dict[str, Any]:
+        if not filters:
+            return {"clause": "", "values": [], "usable": True, "ignored_filters": []}
+
+        normalized_columns = {str(col).lower() for col in (table_columns or set())}
+        clauses: List[str] = []
+        values: List[Any] = []
+        ignored: List[str] = []
+
+        for column, value in filters.items():
+            if column in {"target", "criteria"}:
+                continue
+            column_name = str(column)
+            if normalized_columns and column_name.lower() not in normalized_columns:
+                ignored.append(column_name)
+                continue
+            clauses.append(f"CAST({column_name} AS CHAR) = CAST(%s AS CHAR)")
+            values.append(value)
+
+        clause = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        usable = bool(clauses) or not bool(filters)
+        return {
+            "clause": clause,
+            "values": values,
+            "usable": usable,
+            "ignored_filters": ignored,
+        }
+
+    def _fetch_table_columns(self, cursor: Any, table: str) -> set[str]:
+        try:
+            cursor.execute(f"SHOW COLUMNS FROM {table}")
+            return {str(row[0]).lower() for row in cursor.fetchall() if row and row[0]}
+        except Exception:
+            return set()
 
 
 __all__ = ["HybridCRUDExecutor", "CRUDResult"]

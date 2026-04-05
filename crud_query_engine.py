@@ -79,7 +79,7 @@ class CRUDQueryEngine:
 
         if operation == "update":
             payload = request.get("payload") or {}
-            filters = request.get("filters") or {}
+            filters = self._normalize_filters(request.get("filters") or {}, schema)
             strategy = (request.get("strategy") or "simple").lower()
             return self._plan_update(
                 schema_id=schema_id,
@@ -91,7 +91,7 @@ class CRUDQueryEngine:
             )
 
         if operation == "delete":
-            filters = request.get("filters") or {}
+            filters = self._normalize_filters(request.get("filters") or {}, schema)
             strategy = (request.get("strategy") or "entity").lower()
             return self._plan_delete(
                 schema_id=schema_id,
@@ -102,7 +102,7 @@ class CRUDQueryEngine:
             )
 
         fields = request.get("fields") or []
-        filters = request.get("filters") or {}
+        filters = self._normalize_filters(request.get("filters") or {}, schema)
         limit = request.get("limit")
 
         field_locations: List[FieldLocation] = []
@@ -111,6 +111,13 @@ class CRUDQueryEngine:
 
         for field in fields:
             location = self._locate_field(field, field_map, table_map)
+            if location.storage == "sql" and (not location.table or (not location.column and not location.related_columns)):
+                fallback_table, fallback_column = self._resolve_sql_column_from_table_map(field, table_map)
+                if fallback_table:
+                    if (not location.table) or (location.table not in table_map) or (not location.column):
+                        location.table = fallback_table
+                    if not location.column:
+                        location.column = fallback_column
             field_locations.append(location)
             if location.storage == "sql" and location.table:
                 columns = location.related_columns or ([location.column] if location.column else [])
@@ -141,6 +148,17 @@ class CRUDQueryEngine:
             "mongo": mongo_plan,
             "merge": merge_plan,
         }
+
+    def _normalize_filters(self, filters: Dict[str, Any], schema: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(filters, dict) or not filters:
+            return {}
+        normalized = dict(filters)
+        entity_name = str(schema.get("entity_name") or "").strip().lower()
+        if entity_name:
+            entity_scoped_id = f"{entity_name}_id"
+            if entity_scoped_id in normalized and "id" not in normalized:
+                normalized["id"] = normalized[entity_scoped_id]
+        return normalized
 
     # ------------------------------------------------------------------
     # Field location helpers
@@ -304,6 +322,26 @@ class CRUDQueryEngine:
                 return name, table
         return None, None
 
+    def _resolve_sql_column_from_table_map(
+        self,
+        field: str,
+        table_map: Dict[str, Dict[str, Any]],
+    ) -> Tuple[Optional[str], Optional[str]]:
+        lookup = (field or "").strip().lower()
+        if not lookup:
+            return None, None
+
+        candidates: List[Tuple[str, str]] = []
+        for table_name, table in table_map.items():
+            for column in table.get("columns", []):
+                col_name = column.get("name")
+                if col_name and str(col_name).lower() == lookup:
+                    candidates.append((table_name, col_name))
+
+        if not candidates:
+            return None, None
+        return candidates[0]
+
     def _build_structural_index(self) -> Dict[str, Dict[str, Any]]:
         registry = self.metadata_manager.get_structural_registry()
         index = {}
@@ -335,7 +373,7 @@ class CRUDQueryEngine:
         base_table = root_table if root_table in tables_needed else next(iter(tables_needed))
         select_clauses = self._build_select_list(tables_to_columns)
         joins = self._generate_joins(base_table, tables_needed, relationships)
-        where_clause, parameters = self._build_where_clause(filters, field_map)
+        where_clause, parameters = self._build_where_clause(filters, field_map, blueprint)
 
         query = f"SELECT {', '.join(select_clauses)} FROM {base_table}"
         if joins:
@@ -419,25 +457,67 @@ class CRUDQueryEngine:
         self,
         filters: Dict[str, Any],
         field_map: Dict[str, List[Dict[str, Any]]],
+        blueprint: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Optional[str], List[Any]]:
         if not filters:
             return None, []
 
         clauses: List[str] = []
         parameters: List[Any] = []
+        seen_filters: Set[Tuple[str, str, Any]] = set()
         for raw_field, value in filters.items():
             entries = field_map.get(raw_field.lower())
-            if not entries:
-                continue
-            chosen = self._prefer_exact(raw_field, entries)
-            table = chosen.get("table")
-            column = chosen.get("column")
+            table = None
+            column = None
+            if entries:
+                chosen = self._prefer_exact(raw_field, entries)
+                table = chosen.get("table")
+                column = chosen.get("column")
+            else:
+                table, column = self._resolve_filter_from_blueprint(raw_field, blueprint)
             if not table or not column:
                 continue
+            signature = (str(table), str(column), value)
+            if signature in seen_filters:
+                continue
+            seen_filters.add(signature)
             clauses.append(f"{table}.{column} = %s")
             parameters.append(value)
 
         return (" AND ".join(clauses) if clauses else None, parameters)
+
+    def _resolve_filter_from_blueprint(
+        self,
+        raw_field: str,
+        blueprint: Optional[Dict[str, Any]],
+    ) -> Tuple[Optional[str], Optional[str]]:
+        if not blueprint:
+            return None, None
+
+        lookup = (raw_field or "").strip().lower()
+        if not lookup:
+            return None, None
+
+        candidates: List[Tuple[str, str]] = []
+        for table in blueprint.get("tables", []):
+            table_name = table.get("name")
+            if not table_name:
+                continue
+            for column in table.get("columns", []):
+                col_name = column.get("name")
+                if col_name and str(col_name).lower() == lookup:
+                    candidates.append((table_name, col_name))
+
+        if not candidates:
+            return None, None
+        if len(candidates) == 1:
+            return candidates[0]
+
+        root_table = blueprint.get("root_table")
+        for table_name, column_name in candidates:
+            if table_name == root_table:
+                return table_name, column_name
+        return candidates[0]
 
     # ------------------------------------------------------------------
     # Mongo planning helpers

@@ -43,7 +43,9 @@ def _import_dashboard_module():
     return importlib.import_module("dashboard_web")
 
 
-_build_empty_read_reason = _import_dashboard_module()._build_empty_read_reason
+dashboard_web = _import_dashboard_module()
+_build_empty_read_reason = dashboard_web._build_empty_read_reason
+_format_field_chips = dashboard_web._format_field_chips
 
 
 def test_empty_reason_missing_fields_is_explicit() -> None:
@@ -89,3 +91,41 @@ def test_empty_reason_merge_mismatch_sql_without_mongo_docs() -> None:
     reason = _build_empty_read_reason(details)
     assert "no matching Mongo documents" in reason
     assert "post_id" in reason
+
+
+def test_hint_status_not_reported_as_missing_field() -> None:
+    details = {
+        "field_locations": [
+            {"requested": "student_id", "status": "hint", "storage": "sql", "notes": "metadata_hint"},
+            {"requested": "name", "status": "resolved", "storage": "sql"},
+        ],
+        "sql": {"statement": "SELECT ...", "where": "student.student_id = %s", "parameters": ["STU-2024-101"]},
+        "result_summary": {"sql_rows": 0, "mongo_documents": 0, "merged_items": 0},
+    }
+
+    reason = _build_empty_read_reason(details)
+    assert "could not be resolved" not in reason
+
+
+def test_sql_zero_match_reason_uses_specific_hint_when_available(monkeypatch) -> None:
+    details = {
+        "field_locations": [
+            {"requested": "student_id", "status": "hint", "storage": "sql"},
+            {"requested": "name", "status": "resolved", "storage": "sql"},
+        ],
+        "sql": {"statement": "SELECT ...", "where": "student.student_id = %s", "parameters": ["STU-2024-101"]},
+        "result_summary": {"sql_rows": 0, "mongo_documents": 0, "merged_items": 0},
+    }
+
+    monkeypatch.setattr(
+        dashboard_web,
+        "_describe_sql_zero_match_reason",
+        lambda _details: "Specific SQL mismatch hint",
+    )
+    reason = _build_empty_read_reason(details)
+    assert reason == "Specific SQL mismatch hint"
+
+
+def test_field_chip_rendering_has_separators() -> None:
+    html = _format_field_chips(["student_id", "name", "cgpa"])
+    assert "</span> <span" in html
