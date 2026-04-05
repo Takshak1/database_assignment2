@@ -1,5 +1,3 @@
-"""Requirement 5: CRUD query generation across SQL + Mongo plans."""
-
 from __future__ import annotations
 
 from typing import Any, Dict

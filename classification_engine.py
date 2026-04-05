@@ -15,9 +15,6 @@ class DataClassificationEngine:
     def __init__(self, *, deep_mongo_depth: int = 3) -> None:
         self.deep_mongo_depth = deep_mongo_depth
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
     def classify_entries(
         self,
         entries: List[Dict[str, Any]],
@@ -49,9 +46,7 @@ class DataClassificationEngine:
         }
         return {"entries": classified, "summary": summary}
 
-    # ------------------------------------------------------------------
-    # Decision logic
-    # ------------------------------------------------------------------
+
     def _decide_pipeline(self, entry: Dict[str, Any]) -> Tuple[str, str, float]:
         classification = (entry.get("classification") or "").lower()
         pattern = (entry.get("pattern") or "").lower()
@@ -93,7 +88,6 @@ class DataClassificationEngine:
         if data_type in {"null", ""}:
             return self.PIPELINE_BUFFER, "null_type", 0.35
 
-        # Default fallback: prefer SQL for remaining structured fields
         return self.PIPELINE_SQL, "default_structured", 0.7
 
 

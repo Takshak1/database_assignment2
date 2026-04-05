@@ -6,3 +6,6 @@ pymongo==4.6.1
 mysql-connector-python==9.0.0
 requests==2.31.0
 python-dotenv==1.0.1
+pydantic==2.6.4
+pytest==8.2.2
+httpx==0.27.0

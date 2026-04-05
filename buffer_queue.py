@@ -15,9 +15,6 @@ class BufferQueue:
         self.db_path = db_path
         self._init_table()
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
     def enqueue(
         self,
         schema_id: int,
@@ -66,7 +63,7 @@ class BufferQueue:
             "SELECT queue_id, schema_id, field_path, value_json, payload_json, reason, status, created_at "
             "FROM buffer_queue"
         )
-        params: List[Any] = []  # type: ignore[assignment]
+        params: List[Any] = []  
         if status:
             query += " WHERE status = ?"
             params.append(status)
@@ -99,9 +96,6 @@ class BufferQueue:
             )
             conn.commit()
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
     def _get_conn(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row

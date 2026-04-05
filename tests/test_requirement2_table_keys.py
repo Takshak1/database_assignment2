@@ -1,4 +1,3 @@
-"""Requirement 2: Table creation logic (primary keys & foreign keys)."""
 
 from __future__ import annotations
 

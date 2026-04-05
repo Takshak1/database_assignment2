@@ -135,11 +135,9 @@ class ResultAggregator:
         key = (merge_plan or {}).get("merge_key")
         if key:
             candidates.extend(self._expand_key_variants(key))
-        # add common fallbacks
         for fallback in ("username", "user_id", "_id"):
             if fallback not in candidates:
                 candidates.extend(self._expand_key_variants(fallback))
-        # Deduplicate preserving order
         seen = set()
         ordered: List[str] = []
         for candidate in candidates:
@@ -235,7 +233,7 @@ class ResultAggregator:
         return self._stringify_object_id(value)
 
     def _stringify_object_id(self, value: Any) -> Any:
-        if value.__class__.__name__ == "ObjectId":  # pragma: no cover - optional dependency
+        if value.__class__.__name__ == "ObjectId": 
             return str(value)
         return value
 

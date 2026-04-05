@@ -1,67 +1,69 @@
-# Adaptive Ingestion & Hybrid Backend Placement
+# Adaptive Object-Oriented Database Framework
 
-## Project Description
-This project implements an autonomous data ingestion system that dynamically routes JSON records to SQL or MongoDB based on field behavior.
+This project builds an autonomous JSON data pipeline that:
+- ingests records,
+- analyzes field behavior,
+- classifies each field to SQL, MongoDB, or Buffer,
+- generates storage and CRUD plans,
+- executes hybrid CRUD,
+- aggregates SQL + Mongo outputs into one JSON response.
 
-<<<<<<< HEAD
-- **Step 1:** Ingestion from API, normalization, statistics analysis, classification.
-- **Step 2:** Routing to SQL (MySQL) or MongoDB based on classifier.
-- **Step 3:** Timestamps, uniqueness handling, metadata persistence.
-- **Step 4:** JSON structure & pipeline analysis (SQL / MongoDB / Buffer).
-- **Step 5:** SQL normalization engine auto-generating relational tables.
-- **Step 6:** MongoDB document strategy (embedding vs referencing).
-- **Step 7:** Storage strategy generator (DDL, collections, field mappings).
-- **Step 8:** JSON ingestion API + buffer promotion.
-- **Step 9:** Automatic CRUD query engine (SQL/Mongo plan synthesis).
-- **Step 10:** Hybrid CRUD execution engine (insert/read/update/delete across SQL + Mongo).
-- **Step 11:** Result aggregation layer (stitch SQL rows with Mongo documents).
-=======
-## Setup & Installation
->>>>>>> 2148dcb5624b41f2a4b43ff1eae5d59b6d1c618a
+## Flow
+![Request Flow](docs/request-flow.svg)
 
-### Create a Virtual Environment
+Flow: Ingest API -> Schema Registry -> Analyzer/Classifier -> Strategy -> CRUD Executor -> MySQL/MongoDB -> Result Aggregator -> Unified JSON response.
 
-```bash
-python -m venv venv
-```
+## Step Coverage (1 to 11)
+1. Ingestion and normalization
+2. SQL/Mongo routing
+3. Metadata persistence
+4. Structure and pipeline analysis
+5. SQL normalization blueprint
+6. Mongo embed/reference strategy
+7. Storage strategy generation
+8. Ingest endpoint and buffer promotion
+9. CRUD query plan generation
+10. Hybrid CRUD execution
+11. Result aggregation
 
-### Activate the Virtual Environment
+## Project Structure
+Core modules and their roles:
 
-**Windows (Git Bash):**
-```bash
-source venv/Scripts/activate
-```
+- `main.py`: orchestrates ingestion pipeline.
+- `schema_registry_api.py`: FastAPI endpoints.
+- `schema_registry.py`: schema + metadata persistence.
+- `schema_analyzer.py`: JSON structure analysis.
+- `classifier.py`, `classification_engine.py`: field routing logic.
+- `sql_normalization_engine.py`: relational table blueprint.
+- `mongo_strategy_engine.py`: document strategy.
+- `storage_strategy_generator.py`: SQL/Mongo physical strategy.
+- `crud_query_engine.py`: SQL/Mongo read plan synthesis.
+- `crud_executor.py`: execution engine.
+- `result_aggregator.py`: SQL + Mongo merge layer.
+- `buffer_queue.py`, `buffer_promoter.py`: delayed promotion for uncertain fields.
+- `metadata_manager.py`: metadata tracking.
 
-**Windows (CMD):**
-```bash
-venv\Scripts\activate
-```
+Supporting directories/files:
+- `tests/`: requirement-wise and workflow tests.
+- `docs/request-flow.svg`: visual request flow used in this README.
+- `metadata.json`: generated metadata output.
+- `requirements.txt`: Python dependency list.
 
-**Mac/Linux:**
-```bash
-source venv/bin/activate
-```
+## API Endpoints
+- `POST /register_schema`
+- `GET /schemas`
+- `GET /schemas/{schema_id}`
+- `POST /schemas/{schema_id}/query_plan`
+- `POST /schemas/{schema_id}/crud`
+- `POST /ingest/{schema_id}`
 
-### Deactivate Virtual Environment
-
-```bash
-deactivate
-```
-
----
-
-## Install Dependencies
-
+## Steps To Execute The Code
+1. Create and activate virtual environment.
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-
----
-
-## Running the Application
-
-Start the dummy JSON API server:
-
+3. Verify setup:
 ```bash
 uvicorn simulation_code:app --reload --port 8000
 ```
@@ -148,24 +150,11 @@ The schema registry lets you register the structure of any incoming JSON entity 
 ```bash
 uvicorn schema_registry_api:app --reload --port 8002
 ```
-
-2. Register a schema via `POST /register_schema`:
-
+5. Run tests (recommended before pipeline run):
 ```bash
-curl -X POST http://localhost:8002/register_schema \
-	-H "Content-Type: application/json" \
-	-d '{
-				"entity": "user",
-				"schema": {
-						"username": {"type": "string", "unique": true},
-						"post_id": {"type": "integer"},
-						"comments": {"type": "array", "items": {"type": "string"}}
-				}
-			}'
+python -m pytest
 ```
-
-3. Inspect registered schemas:
-
+6. Run pipeline (optional stream run):
 ```bash
 curl http://localhost:8002/schemas
 curl http://localhost:8002/schemas/1
@@ -397,35 +386,29 @@ uvicorn schema_registry_api:app --reload --port 8002
 Then POST a query description:
 
 ```bash
-curl -X POST http://localhost:8002/schemas/1/query_plan \
-	-H "Content-Type: application/json" \
-	-d '{
-				"operation": "read",
-				"fields": ["username", "comments"],
-				"filters": {"username": "user1"},
-				"limit": 25
-			}'
+python -m pytest tests/test_requirement1_normalization.py
+python -m pytest tests/test_requirement2_table_keys.py
+python -m pytest tests/test_requirement3_mongo_strategy.py
+python -m pytest tests/test_requirement4_metadata_system.py
+python -m pytest tests/test_requirement5_crud_generation.py
+python -m pytest tests/test_requirement6_performance.py
+python -m pytest tests/test_requirement7_sources.py
 ```
 
-The response contains:
+## Environment Variables
+Defaults:
+- `MYSQL_HOST=localhost`
+- `MYSQL_USER=root`
+- `MYSQL_PASSWORD=devil`
+- `MYSQL_DATABASE=streaming_db`
+- `MONGO_HOST=localhost`
+- `MONGO_PORT=27017`
+- `MONGO_DATABASE=streaming_db`
+- `MONGO_COLLECTION=logs`
 
-1. **Field locations** &mdash; where every requested field lives (table/column or Mongo collection).
-2. **SQL plan** &mdash; SELECT list, JOIN clauses, parameters, and the final statement.
-3. **Mongo plan** (when needed) &mdash; collection, filter document, and projection.
-4. **Merge strategy** &mdash; instructions for stitching the SQL and Mongo result sets into the JSON shape requested by the client.
+Use `.env` to override.
 
-Internally `crud_query_engine.py` combines:
-
-- Storage strategy mappings (`schema_storage_strategies`) so every field knows its physical destination.
-- SQL blueprints (`schema_sql_blueprints`) for joins/primary keys.
-- Enhanced metadata hints for buffer/unclassified fields.
-
-This keeps query generation declarative: clients never touch SQL, but operators can still see the generated statements for auditing or manual execution.
-
-### Step 10 — Hybrid CRUD Execution
-
-The new `crud_executor.py` + `/schemas/{id}/crud` endpoint turns those plans into real operations. Requests share a single JSON envelope:
-
+## Useful Commands
 ```bash
 curl -X POST http://localhost:8002/schemas/1/crud \
 	-H "Content-Type: application/json" \
@@ -601,73 +584,21 @@ http://127.0.0.1:8000
 python -m pip install -r requirements.txt
 ```
 
-## Environment (Databases)
-- The pipeline expects access to a MySQL server and a MongoDB server. You can configure connection details using environment variables or a `.env` file. Supported vars (defaults shown):
+## Metadata and Reports
+- `metadata.json`: generated metadata store.
+- `analyze_metadata.py`: metadata summary/export utility.
 
-- `MYSQL_HOST` (default: `localhost`)
-- `MYSQL_USER` (default: `root`)
-- `MYSQL_PASSWORD` (default: `devil`)
-- `MYSQL_DATABASE` (default: `streaming_db`)
-- `MONGO_HOST` (default: `localhost`)
-- `MONGO_PORT` (default: `27017`)
-- `MONGO_DATABASE` (default: `streaming_db`)
-- `MONGO_COLLECTION` (default: `logs`)
-
-Create a `.env` file in the project root if you want to override these values.
-
-## Quickstart  Local demo
-1. Install requirements (see above).
-2. Start the simulation SSE API (recommended port 8001):
-
+Run:
 ```bash
-# from project root
-uvicorn simulation_code:app --reload --port 8001
-```
-
-3. In a separate terminal, run the pipeline which will connect to the simulation, analyze records, update metadata, and store into backends:
-
-```bash
-python main.py
-```
-
-Notes:
-- `ingestion.py` fetches events from the simulation at `http://127.0.0.1:8001` by default.
-- `main.py` will attempt to create SQL schema from the metadata and insert records into MySQL and MongoDB. Ensure both DBs are reachable before running.
-
-## Analyze Metadata & Reports
-- Generate a human-readable metadata report or export a detailed JSON report:
-
-```bash
-# Show summary report
 python analyze_metadata.py
-
-# Export detailed JSON report
 python analyze_metadata.py export
-
-# Show specific field detail
 python analyze_metadata.py <field_name>
 ```
 
-## Important Files
-- `main.py` — Pipeline orchestrator: ingestion → analysis → classification → routing → storage.
-- `simulation_code.py` — FastAPI-based SSE generator (used for local testing).
-- `ingestion.py` — SSE/http client that yields records to the pipeline.
-- `normalize.py` — Record normalization hook (currently passthrough).
-- `analyzer.py` — Field statistics, uniqueness, type samples and stability calculations.
-- `classifier.py` — Heuristics for placement decisions (SQL vs MongoDB).
-- `drift_detector.py` — Sliding-window type-drift detection and quarantine logic.
-- `storage_manager.py` — Connects to MySQL + MongoDB and performs inserts; includes bi-temporal examples.
-- `metadata_manager.py` — Maintains enhanced field metadata in `metadata.json`.
-- `analyze_metadata.py` — Reporting and metadata export utilities.
-- `metadata.json` — Generated enhanced metadata (updated by `main.py`).
-
 ## Troubleshooting
-- If ingestion can't reach the simulation server, verify the simulation is running on the expected port and the `BASE_URL` in `ingestion.py` matches.
-- If DB connections fail, check credentials and ensure MySQL and MongoDB are running and accessible.
-- For local MySQL testing, consider using Docker:
+- If setup fails: run `verify_setup.py` and `db_connectivity_check.py`.
+- If ingestion fails: ensure simulation service is running on expected host/port.
+- If DB failures occur: verify MySQL/Mongo status and `.env` credentials.
 
-```bash
-docker run --name local-mysql -e MYSQL_ROOT_PASSWORD=devil -e MYSQL_DATABASE=streaming_db -p 3306:3306 -d mysql:8
-docker run --name local-mongo -p 27017:27017 -d mongo:6
-```
->>>>>>> 2148dcb5624b41f2a4b43ff1eae5d59b6d1c618a
+## Tests and Current Status
+Requirement-focused tests are present under `tests/` and include normalization, key logic, Mongo strategy, metadata system, CRUD generation, performance, and sources coverage.

@@ -1,5 +1,3 @@
-"""Requirement 3: MongoDB design strategy (embed vs reference heuristics)."""
-
 from __future__ import annotations
 
 from mongo_strategy_engine import MongoDocumentStrategyEngine

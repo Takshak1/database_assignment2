@@ -1,5 +1,3 @@
-"""Requirement 6: Performance considerations (projection pruning, LIMIT enforcement)."""
-
 from __future__ import annotations
 
 from typing import Dict

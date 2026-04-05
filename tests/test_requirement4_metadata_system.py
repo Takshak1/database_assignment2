@@ -1,5 +1,3 @@
-"""Requirement 4: Metadata system captures structural + semantic information."""
-
 from __future__ import annotations
 
 from typing import Dict

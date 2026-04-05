@@ -1,0 +1,14 @@
+flowchart LR
+    C[Client] --> I[Ingest API\nPOST /ingest/:schema_id]
+    I --> R[Schema Registry]
+    R --> A[Analyzer]
+    A --> K[Classifier]
+    K --> S[Storage Strategy Generator]
+    S --> Q[CRUD Planner / Executor]
+
+    Q --> SQL[(MySQL)]
+    Q --> M[(MongoDB)]
+    SQL --> G[Result Aggregator]
+    M --> G
+    G --> O[Unified JSON Response]
+    O --> C
