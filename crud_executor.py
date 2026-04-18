@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
+import copy
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -455,6 +457,7 @@ class HybridCRUDExecutor:
             created_cursor = True
         inserted_keys: Dict[str, List[int]] = {}
         details: List[Dict[str, Any]] = []
+        required_columns_cache: Dict[str, List[Tuple[str, str]]] = {}
         try:
             for table in plan["order"]:
                 table_rows = plan["rows"].get(table, [])
@@ -469,6 +472,12 @@ class HybridCRUDExecutor:
                         parent_key = parent_keys[-1] if parent_keys else None
                         if parent_key is not None:
                             row_to_insert[parent_column] = parent_key
+                    self._fill_missing_required_columns(
+                        cursor,
+                        table,
+                        row_to_insert,
+                        required_columns_cache,
+                    )
                     columns = list(row_to_insert.keys())
                     if not columns:
                         statement = f"INSERT INTO {table} () VALUES ()"
@@ -502,6 +511,45 @@ class HybridCRUDExecutor:
         total_rows = sum(len(v) for v in inserted_keys.values())
         return {"rows_inserted": total_rows, "details": details}
 
+    def _fill_missing_required_columns(
+        self,
+        cursor: Any,
+        table: str,
+        row_to_insert: Dict[str, Any],
+        cache: Dict[str, List[Tuple[str, str]]],
+    ) -> None:
+        required_columns = cache.get(table)
+        if required_columns is None:
+            required_columns = []
+            cursor.execute(f"SHOW COLUMNS FROM {table}")
+            for col_name, col_type, nullable, _key, default, extra in cursor.fetchall():
+                if str(nullable).upper() == "NO" and default is None and "auto_increment" not in str(extra).lower():
+                    required_columns.append((str(col_name), str(col_type).lower()))
+            cache[table] = required_columns
+
+        for col_name, col_type in required_columns:
+            if col_name in row_to_insert:
+                continue
+            row_to_insert[col_name] = self._required_column_default(cursor, table, col_name, col_type)
+
+    def _required_column_default(self, cursor: Any, table: str, col_name: str, col_type: str) -> Any:
+        lowered_col = col_name.lower()
+        if any(token in col_type for token in ("int", "decimal", "double", "float", "numeric")):
+            cursor.execute(f"SELECT COALESCE(MAX({col_name}), 0) + 1 FROM {table}")
+            row = cursor.fetchone()
+            next_value = row[0] if row else 1
+            if next_value is None:
+                return 1
+            return next_value
+
+        if lowered_col == "id" or lowered_col.endswith("_id"):
+            return f"auto_{uuid.uuid4().hex[:12]}"
+
+        if "bool" in col_type:
+            return False
+
+        return ""
+
     def _execute_mongo_inserts(
         self,
         plan: Dict[str, Any],
@@ -523,7 +571,14 @@ class HybridCRUDExecutor:
         details: List[Dict[str, Any]] = []
         try:
             for collection, document in collections.items():
-                result = db[collection].insert_one(document, session=session)
+                try:
+                    result = db[collection].insert_one(document, session=session)
+                except Exception as exc:
+                    # Mongo standalone nodes can reject session-backed writes.
+                    if session is not None and "Transaction numbers are only allowed on a replica set member or mongos" in str(exc):
+                        result = db[collection].insert_one(document)
+                    else:
+                        raise
                 details.append({
                     "collection": collection,
                     "document": document,
@@ -622,7 +677,9 @@ class HybridCRUDExecutor:
         cursor = conn.cursor(dictionary=True)
         try:
             statement = sql_plan.get("statement")
-            params = sql_plan.get("parameters", [])
+            params = sql_plan.get("parameters", {})
+            if isinstance(params, dict):
+                params = list(params.values())
             cursor.execute(statement, params)
             rows = cursor.fetchall()
         finally:
@@ -644,13 +701,59 @@ class HybridCRUDExecutor:
                 collection = item.get("collection")
                 projection = item.get("projection") or None
                 filter_doc = item.get("filter") or {}
-                docs = list(db[collection].find(filter_doc, projection))
+                projection_candidates: List[Optional[Dict[str, int]]] = [projection]
+                if isinstance(projection, dict):
+                    normalized_projection: Dict[str, int] = {}
+                    for key, value in projection.items():
+                        normalized_key = key
+                        if key.startswith("university."):
+                            normalized_key = key.split(".", 1)[1]
+                        normalized_projection[normalized_key] = value
+                    if normalized_projection != projection:
+                        projection_candidates.append(normalized_projection)
+
+                candidate_collections: List[str] = []
+                if collection:
+                    candidate_collections.append(collection)
+                if isinstance(projection, dict):
+                    for key in projection.keys():
+                        root_segment = key.split(".", 1)[0].strip()
+                        if not root_segment:
+                            continue
+                        for suffix in ("_data", "_docs"):
+                            fallback_collection = f"{root_segment}{suffix}"
+                            if fallback_collection not in candidate_collections:
+                                candidate_collections.append(fallback_collection)
+
+                docs: List[Dict[str, Any]] = []
+                existing_collections = set(db.list_collection_names())
+                for candidate_collection in candidate_collections:
+                    if candidate_collection not in existing_collections:
+                        continue
+                    for candidate_projection in projection_candidates:
+                        docs = list(db[candidate_collection].find(filter_doc, candidate_projection))
+                        if docs and self._mongo_docs_have_visible_fields(docs):
+                            break
+                    if docs and self._mongo_docs_have_visible_fields(docs):
+                        collection = candidate_collection
+                        break
+
+                if not docs:
+                    continue
+
                 for doc in docs:
                     doc["_collection"] = collection
                     results.append(doc)
         finally:
             client.close()
         return results
+
+    def _mongo_docs_have_visible_fields(self, docs: List[Dict[str, Any]]) -> bool:
+        for doc in docs:
+            visible_keys = [key for key in doc.keys() if key not in {"_id", "_collection"}]
+            if visible_keys:
+                return True
+        return False
 
 
     def _handle_update(
@@ -714,12 +817,13 @@ class HybridCRUDExecutor:
             if not execute:
                 return {
                     "strategy": "simple",
-                    "effective_strategy": "advanced",
-                    "plan": advanced_plan,
+                    "effective_strategy": "simple",
+                    "plan": update_plan,
+                    "preview_plan": advanced_plan,
                     "auto_create_sql": auto_create_hint,
-                    "sql": sql_updates,
-                    "mongo": mongo_updates,
-                    "note": "Simple update auto-promoted to targeted update for filtered partial payload.",
+                    "sql": update_plan.get("sql", []),
+                    "mongo": update_plan.get("mongo", []),
+                    "note": "Simple update preview keeps delete-then-insert semantics; execute mode may promote to targeted update.",
                 }
 
             if self._transaction_enabled():
@@ -1068,6 +1172,9 @@ class HybridCRUDExecutor:
     def _allow_unfiltered_destructive_writes(self) -> bool:
         return os.getenv("ALLOW_UNFILTERED_DESTRUCTIVE_WRITES", "0").strip().lower() in {"1", "true", "yes", "on"}
 
+    def _is_standalone_mongo_transaction_error(self, exc: Exception) -> bool:
+        return "Transaction numbers are only allowed on a replica set member or mongos" in str(exc)
+
     def _execute_transactional_insert(self, sql_plan: Dict[str, Any], mongo_plan: Dict[str, Any]) -> Dict[str, Any]:
         if mysql_connector is None:
             raise RuntimeError("mysql-connector-python is not available")
@@ -1096,7 +1203,23 @@ class HybridCRUDExecutor:
             if mongo_in_txn and mongo_session is not None:
                 mongo_session.commit_transaction()
             sql_conn.commit()
-        except Exception:
+        except Exception as exc:
+            if self._is_standalone_mongo_transaction_error(exc):
+                sql_conn.rollback()
+                if mongo_in_txn and mongo_session is not None:
+                    self._safe_abort_mongo_transaction(mongo_session)
+                else:
+                    self._rollback_mongo_inserts(mongo_client, mongo_result)
+
+                fallback_sql_result = self._execute_sql_inserts(sql_plan)
+                fallback_mongo_result = self._execute_mongo_inserts(
+                    self._mongo_plan_without_generated_ids(mongo_plan)
+                )
+                return {
+                    "sql": fallback_sql_result,
+                    "mongo": fallback_mongo_result,
+                    "transaction_fallback": "standalone_mongo",
+                }
             sql_conn.rollback()
             if mongo_in_txn and mongo_session is not None:
                 self._safe_abort_mongo_transaction(mongo_session)
@@ -1112,6 +1235,20 @@ class HybridCRUDExecutor:
             sql_conn.close()
 
         return {"sql": sql_result, "mongo": mongo_result}
+
+    def _mongo_plan_without_generated_ids(self, mongo_plan: Dict[str, Any]) -> Dict[str, Any]:
+        """Return a copy of mongo_plan with Mongo-generated _id values stripped.
+
+        insert_one mutates documents by attaching _id. If a retry/fallback reuses the
+        same plan, that stale _id can cause duplicate-key failures.
+        """
+        cleaned_plan = copy.deepcopy(mongo_plan or {})
+        collections = cleaned_plan.get("collections") or {}
+        if isinstance(collections, dict):
+            for doc in collections.values():
+                if isinstance(doc, dict):
+                    doc.pop("_id", None)
+        return cleaned_plan
 
     def _execute_transactional_update(
         self,
@@ -1149,7 +1286,22 @@ class HybridCRUDExecutor:
             if mongo_in_txn and mongo_session is not None:
                 mongo_session.commit_transaction()
             sql_conn.commit()
-        except Exception:
+        except Exception as exc:
+            if self._is_standalone_mongo_transaction_error(exc):
+                sql_conn.rollback()
+                if mongo_in_txn and mongo_session is not None:
+                    self._safe_abort_mongo_transaction(mongo_session)
+                else:
+                    self._rollback_mongo_updates(mongo_client, mongo_backups)
+
+                fallback_sql_result = self._execute_sql_updates(sql_plan, filters)
+                fallback_mongo_result = self._execute_mongo_updates(mongo_plan, filters)
+                return {
+                    "strategy": "advanced",
+                    "sql": fallback_sql_result,
+                    "mongo": fallback_mongo_result,
+                    "transaction_fallback": "standalone_mongo",
+                }
             sql_conn.rollback()
             if mongo_in_txn and mongo_session is not None:
                 self._safe_abort_mongo_transaction(mongo_session)

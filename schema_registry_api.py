@@ -249,6 +249,8 @@ def build_query_plan(schema_id: int, payload: QueryRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - defensive guard
         raise HTTPException(status_code=500, detail="Failed to build query plan") from exc
+    if isinstance(plan.get("sql"), dict) and isinstance(plan["sql"].get("parameters"), list):
+        plan["sql"]["parameters"] = {f"param_{idx}": value for idx, value in enumerate(plan["sql"]["parameters"])}
     return {"message": "Query plan generated", "plan": plan}
 
 

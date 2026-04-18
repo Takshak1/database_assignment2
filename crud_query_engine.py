@@ -37,6 +37,11 @@ class FieldLocation:
         }
 
 
+class ParameterList(list):
+    def values(self) -> List[Any]:
+        return list(self)
+
+
 class CRUDQueryEngine:
     """Plans CRUD operations based on registry metadata."""
 
@@ -65,7 +70,8 @@ class CRUDQueryEngine:
         schema = self.registry.get_schema(schema_id)
         blueprint = schema.get("sql_blueprint") or schema.get("analysis", {}).get("sql_blueprint")
         storage_strategy = schema.get("storage_strategy") or {}
-        field_map = self._build_field_map(storage_strategy)
+        mongo_strategy = schema.get("mongo_strategy") or {}
+        field_map = self._build_field_map(storage_strategy, mongo_strategy)
         table_map = self._build_table_map(blueprint)
 
         if operation == "insert":
@@ -163,7 +169,11 @@ class CRUDQueryEngine:
     # ------------------------------------------------------------------
     # Field location helpers
     # ------------------------------------------------------------------
-    def _build_field_map(self, storage_strategy: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    def _build_field_map(
+        self,
+        storage_strategy: Dict[str, Any],
+        mongo_strategy: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, List[Dict[str, Any]]]:
         mappings = storage_strategy.get("mappings", {}).get("fields", [])
         index: Dict[str, List[Dict[str, Any]]] = {}
         for entry in mappings:
@@ -173,6 +183,17 @@ class CRUDQueryEngine:
             keys = {field_path.lower(), field_path.split(".")[-1].lower()}
             for key in keys:
                 index.setdefault(key, []).append(entry)
+
+        for entry in (mongo_strategy or {}).get("entries", []):
+            field_path = entry.get("field_path")
+            if not field_path:
+                continue
+            mongo_entry = dict(entry)
+            mongo_entry.setdefault("decision", "mongo")
+            mongo_entry.setdefault("collection", entry.get("target_collection"))
+            keys = {field_path.lower(), field_path.split(".")[-1].lower()}
+            for key in keys:
+                index.setdefault(key, []).append(mongo_entry)
         return index
 
     def _build_table_map(self, blueprint: Optional[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -458,12 +479,12 @@ class CRUDQueryEngine:
         filters: Dict[str, Any],
         field_map: Dict[str, List[Dict[str, Any]]],
         blueprint: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Optional[str], List[Any]]:
+    ) -> Tuple[Optional[str], ParameterList]:
         if not filters:
-            return None, []
+            return None, ParameterList()
 
         clauses: List[str] = []
-        parameters: List[Any] = []
+        parameters: ParameterList = ParameterList()
         seen_filters: Set[Tuple[str, str, Any]] = set()
         for raw_field, value in filters.items():
             entries = field_map.get(raw_field.lower())
@@ -948,19 +969,25 @@ class CRUDQueryEngine:
         relationships = blueprint.get("relationships", [])
         order: List[str] = []
         visited = set()
+        visiting = set()
 
         def visit(table: str) -> None:
             if table in visited:
                 return
+            if table in visiting:
+                # Break cyclic FK chains by stopping the current DFS branch.
+                return
+            visiting.add(table)
             parent = self._parent_table(table, relationships)
-            if parent:
+            if parent and parent != table:
                 visit(parent)
+            visiting.remove(table)
             visited.add(table)
             order.append(table)
 
         for table in tables:
             visit(table)
-        if root and root in order:
+        if root and root in order and not self._parent_table(root, relationships):
             order.remove(root)
             order.insert(0, root)
         return order
@@ -968,7 +995,10 @@ class CRUDQueryEngine:
     def _parent_table(self, table: str, relationships: List[Dict[str, Any]]) -> Optional[str]:
         for relation in relationships:
             if relation.get("from_table") == table:
-                return relation.get("to_table")
+                parent = relation.get("to_table")
+                if parent == table:
+                    continue
+                return parent
         return None
 
     def _build_fk_hints(self, relationships: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:

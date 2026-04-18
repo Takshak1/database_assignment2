@@ -207,6 +207,10 @@ class ResultAggregator:
             cleaned = self._sanitize_document(dict(doc))
             merge_key = self._extract_merge_key(cleaned, cleaned, merge_key_candidates)
             safe_key = self._safe_key(merge_key, fallback=f"mongo_{idx}")
+            if merge_key is None and base_index:
+                for key in order:
+                    self._merge_maps(base_index[key], cleaned)
+                continue
             if safe_key not in base_index:
                 base_index[safe_key] = {}
                 order.append(safe_key)

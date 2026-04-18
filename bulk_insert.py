@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from typing import Any, Dict, List
 
 import requests
@@ -50,7 +51,11 @@ def _post_entry(endpoint: str, entity: str, entry: Dict[str, Any], execute: bool
 def main() -> None:
     parser = argparse.ArgumentParser(description="Send insert requests one-by-one for each JSON entry")
     parser.add_argument("--file", default="university_data.json", help="Path to JSON file")
-    parser.add_argument("--endpoint", default="http://127.0.0.1:8002/crud_auto", help="CRUD auto endpoint")
+    parser.add_argument(
+        "--endpoint",
+        default=os.getenv("SCHEMA_REGISTRY_API_ENDPOINT", "http://127.0.0.1:8002/crud_auto"),
+        help="CRUD auto endpoint",
+    )
     parser.add_argument("--entity", default="university", help="Entity name for auto-registration")
     parser.add_argument("--execute", action="store_true", help="Execute inserts against live backends")
     parser.add_argument(

@@ -1,0 +1,4 @@
+scenario,logical_avg_ms,direct_avg_ms,overhead_abs_ms,overhead_percent
+User Retrieval (Logical vs Direct SQL),52.847,6.6,46.247,700.682
+Nested Access (Logical vs Direct Mongo),79.71,33.055,46.656,141.146
+Cross-Entity Update (Logical vs Direct Mixed),164.356,44.367,119.989,270.444

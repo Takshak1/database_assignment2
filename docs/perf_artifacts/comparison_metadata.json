@@ -1,0 +1,6520 @@
+{
+  "university": {
+    "creation_timestamp": "2026-04-18T15:11:19.904362",
+    "field_name": "university",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": false,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "dict"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "dict",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "root_entity",
+      "confidence": 0.9,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.971741",
+    "structural_profile": {
+      "field": "university",
+      "field_path": "university",
+      "canonical_name": "university",
+      "data_type": "dict",
+      "nest_level": 0,
+      "parent": null,
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "logs",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "root",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "university.contact": {
+    "creation_timestamp": "2026-04-18T15:11:19.904362",
+    "field_name": "university.contact",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "dict"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "dict",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "nested_relation",
+      "confidence": 0.85,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.contact",
+      "field_path": "university.contact",
+      "canonical_name": "university_contact",
+      "data_type": "dict",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "university.courses": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.courses",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "list"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "list",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "repeating_entity",
+      "confidence": 0.92,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.courses",
+      "field_path": "university.courses",
+      "canonical_name": "university_courses",
+      "data_type": "list",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": true
+    }
+  },
+  "university.departments": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.departments",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "list"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "list",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "repeating_entity",
+      "confidence": 0.92,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.departments",
+      "field_path": "university.departments",
+      "canonical_name": "university_departments",
+      "data_type": "list",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": true
+    }
+  },
+  "university.established": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.established",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "child_attribute",
+      "confidence": 0.8,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.established",
+      "field_path": "university.established",
+      "canonical_name": "university_established",
+      "data_type": "int",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "university.faculty_members": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.faculty_members",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "list"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "list",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "repeating_entity",
+      "confidence": 0.92,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.faculty_members",
+      "field_path": "university.faculty_members",
+      "canonical_name": "university_faculty_members",
+      "data_type": "list",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": true
+    }
+  },
+  "university.id": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "child_attribute",
+      "confidence": 0.8,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.id",
+      "field_path": "university.id",
+      "canonical_name": "university_id",
+      "data_type": "str",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "university.name": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.name",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "child_attribute",
+      "confidence": 0.8,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.name",
+      "field_path": "university.name",
+      "canonical_name": "university_name",
+      "data_type": "str",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "university.placements": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.placements",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "dict"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "dict",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "nested_relation",
+      "confidence": 0.85,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.placements",
+      "field_path": "university.placements",
+      "canonical_name": "university_placements",
+      "data_type": "dict",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "university.stats": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.stats",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "dict"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "dict",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "nested_relation",
+      "confidence": 0.85,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.stats",
+      "field_path": "university.stats",
+      "canonical_name": "university_stats",
+      "data_type": "dict",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "university.students": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.students",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "list"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "list",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "repeating_entity",
+      "confidence": 0.92,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.students",
+      "field_path": "university.students",
+      "canonical_name": "university_students",
+      "data_type": "list",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": true
+    }
+  },
+  "university.type": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "university.type",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "child_attribute",
+      "confidence": 0.8,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "university.type",
+      "field_path": "university.type",
+      "canonical_name": "university_type",
+      "data_type": "str",
+      "nest_level": 1,
+      "parent": "university",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "university",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "university",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "placements.avg_package_usd": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "placements.avg_package_usd",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "placements.avg_package_usd",
+      "field_path": "placements.avg_package_usd",
+      "canonical_name": "placements_avg_package_usd",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "placements",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "placements",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "placements",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "stats.campuses": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "stats.campuses",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.972740",
+    "structural_profile": {
+      "field": "stats.campuses",
+      "field_path": "stats.campuses",
+      "canonical_name": "stats_campuses",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "stats",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "stats",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "stats",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.capacity": {
+    "creation_timestamp": "2026-04-18T15:11:19.905809",
+    "field_name": "courses.capacity",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "public",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "location",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "courses.capacity",
+      "field_path": "courses.capacity",
+      "canonical_name": "courses_capacity",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "courses",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.cgpa": {
+    "creation_timestamp": "2026-04-18T15:11:19.907223",
+    "field_name": "students.cgpa",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "float"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "float",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "students.cgpa",
+      "field_path": "students.cgpa",
+      "canonical_name": "students_cgpa",
+      "data_type": "float",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "contact.city": {
+    "creation_timestamp": "2026-04-18T15:11:19.907223",
+    "field_name": "contact.city",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "public",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "location",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "contact.city",
+      "field_path": "contact.city",
+      "canonical_name": "contact_city",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "contact",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "contact",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "contact",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "contact.country": {
+    "creation_timestamp": "2026-04-18T15:11:19.907223",
+    "field_name": "contact.country",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "public",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "location",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "contact.country",
+      "field_path": "contact.country",
+      "canonical_name": "contact_country",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "contact",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "contact",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "contact",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.course_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.907223",
+    "field_name": "courses.course_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "courses.course_id",
+      "field_path": "courses.course_id",
+      "canonical_name": "courses_course_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": "courses.course_id",
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "courses",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.credits": {
+    "creation_timestamp": "2026-04-18T15:11:19.907223",
+    "field_name": "courses.credits",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": [
+        "PCI_DSS"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "courses.credits",
+      "field_path": "courses.credits",
+      "canonical_name": "courses_credits",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "courses",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "departments.dept_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.907223",
+    "field_name": "departments.dept_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "departments.dept_id",
+      "field_path": "departments.dept_id",
+      "canonical_name": "departments_dept_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "departments",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "departments",
+      "foreign_key": "departments.dept_id",
+      "key_relationships": {
+        "primary_key": "departments.dept_id",
+        "foreign_keys": [
+          {
+            "field": "departments.dept_id",
+            "references": "departments",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.dept_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "faculty_members.dept_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "faculty_members.dept_id",
+      "field_path": "faculty_members.dept_id",
+      "canonical_name": "faculty_members_dept_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": "faculty_members.dept_id",
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.dept_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "courses.dept_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "courses.dept_id",
+      "field_path": "courses.dept_id",
+      "canonical_name": "courses_dept_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.dept_id",
+      "key_relationships": {
+        "primary_key": "courses.dept_id",
+        "foreign_keys": [
+          {
+            "field": "courses.dept_id",
+            "references": "courses",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.designation": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "faculty_members.designation",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "faculty_members.designation",
+      "field_path": "faculty_members.designation",
+      "canonical_name": "faculty_members_designation",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "contact.email": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "contact.email",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "contact.email",
+      "field_path": "contact.email",
+      "canonical_name": "contact_email",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "contact",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "contact",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "contact",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.email": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "faculty_members.email",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "faculty_members.email",
+      "field_path": "faculty_members.email",
+      "canonical_name": "faculty_members_email",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.email": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "students.email",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "students.email",
+      "field_path": "students.email",
+      "canonical_name": "students_email",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.emp_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "faculty_members.emp_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "faculty_members.emp_id",
+      "field_path": "faculty_members.emp_id",
+      "canonical_name": "faculty_members_emp_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.emp_id",
+      "key_relationships": {
+        "primary_key": "faculty_members.emp_id",
+        "foreign_keys": [
+          {
+            "field": "faculty_members.emp_id",
+            "references": "faculty_members",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.enrolled": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "courses.enrolled",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.973740",
+    "structural_profile": {
+      "field": "courses.enrolled",
+      "field_path": "courses.enrolled",
+      "canonical_name": "courses_enrolled",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "courses",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.experience_years": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "faculty_members.experience_years",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "faculty_members.experience_years",
+      "field_path": "faculty_members.experience_years",
+      "canonical_name": "faculty_members_experience_years",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.fees_status": {
+    "creation_timestamp": "2026-04-18T15:11:19.908223",
+    "field_name": "students.fees_status",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "students.fees_status",
+      "field_path": "students.fees_status",
+      "canonical_name": "students_fees_status",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "departments.head_emp_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "departments.head_emp_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "departments.head_emp_id",
+      "field_path": "departments.head_emp_id",
+      "canonical_name": "departments_head_emp_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "departments",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "departments",
+      "foreign_key": "departments.head_emp_id",
+      "key_relationships": {
+        "primary_key": "departments.head_emp_id",
+        "foreign_keys": [
+          {
+            "field": "departments.head_emp_id",
+            "references": "departments",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.instructor_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "courses.instructor_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "courses.instructor_id",
+      "field_path": "courses.instructor_id",
+      "canonical_name": "courses_instructor_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.instructor_id",
+      "key_relationships": {
+        "primary_key": "courses.instructor_id",
+        "foreign_keys": [
+          {
+            "field": "courses.instructor_id",
+            "references": "courses",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "departments.name": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "departments.name",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "departments.name",
+      "field_path": "departments.name",
+      "canonical_name": "departments_name",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "departments",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "departments",
+      "foreign_key": "departments.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "departments.dept_id",
+            "references": "departments",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.name": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "faculty_members.name",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "faculty_members.name",
+      "field_path": "faculty_members.name",
+      "canonical_name": "faculty_members_name",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.name": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "students.name",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "students.name",
+      "field_path": "students.name",
+      "canonical_name": "students_name",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "contact.phone": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "contact.phone",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "contact.phone",
+      "field_path": "contact.phone",
+      "canonical_name": "contact_phone",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "contact",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "contact",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "contact",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "placements.placed": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "placements.placed",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "placements.placed",
+      "field_path": "placements.placed",
+      "canonical_name": "placements_placed",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "placements",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "placements",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "placements",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "placements.placement_rate_percent": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "placements.placement_rate_percent",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "float"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "float",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": true,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "placements.placement_rate_percent",
+      "field_path": "placements.placement_rate_percent",
+      "canonical_name": "placements_placement_rate_percent",
+      "data_type": "float",
+      "nest_level": 2,
+      "parent": "placements",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "placements",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "placements",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.program_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "students.program_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "students.program_id",
+      "field_path": "students.program_id",
+      "canonical_name": "students_program_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": "students.program_id",
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "departments.programs": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "departments.programs",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "list"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "list",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "departments.programs",
+      "field_path": "departments.programs",
+      "canonical_name": "departments_programs",
+      "data_type": "list",
+      "nest_level": 2,
+      "parent": "departments",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "departments",
+      "foreign_key": "departments.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "departments.dept_id",
+            "references": "departments",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": true
+    }
+  },
+  "faculty_members.publications": {
+    "creation_timestamp": "2026-04-18T15:11:19.909222",
+    "field_name": "faculty_members.publications",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.974749",
+    "structural_profile": {
+      "field": "faculty_members.publications",
+      "field_path": "faculty_members.publications",
+      "canonical_name": "faculty_members_publications",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.salary_usd": {
+    "creation_timestamp": "2026-04-18T15:11:19.910222",
+    "field_name": "faculty_members.salary_usd",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "faculty_members.salary_usd",
+      "field_path": "faculty_members.salary_usd",
+      "canonical_name": "faculty_members_salary_usd",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.scholarship": {
+    "creation_timestamp": "2026-04-18T15:11:19.910222",
+    "field_name": "students.scholarship",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "bool"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "bool",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "students.scholarship",
+      "field_path": "students.scholarship",
+      "canonical_name": "students_scholarship",
+      "data_type": "bool",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.semester": {
+    "creation_timestamp": "2026-04-18T15:11:19.910222",
+    "field_name": "courses.semester",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "courses.semester",
+      "field_path": "courses.semester",
+      "canonical_name": "courses_semester",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "courses",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.specializations": {
+    "creation_timestamp": "2026-04-18T15:11:19.910222",
+    "field_name": "faculty_members.specializations",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "list"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "list",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "faculty_members.specializations",
+      "field_path": "faculty_members.specializations",
+      "canonical_name": "faculty_members_specializations",
+      "data_type": "list",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": true
+    }
+  },
+  "contact.state": {
+    "creation_timestamp": "2026-04-18T15:11:19.910222",
+    "field_name": "contact.state",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "contact.state",
+      "field_path": "contact.state",
+      "canonical_name": "contact_state",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "contact",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "contact",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "contact",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "faculty_members.status": {
+    "creation_timestamp": "2026-04-18T15:11:19.910222",
+    "field_name": "faculty_members.status",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "faculty_members.status",
+      "field_path": "faculty_members.status",
+      "canonical_name": "faculty_members_status",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "faculty_members",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "faculty_members",
+      "foreign_key": "faculty_members.dept_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "faculty_members.dept_id",
+            "references": "faculty_members",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.status": {
+    "creation_timestamp": "2026-04-18T15:11:19.910222",
+    "field_name": "students.status",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "students.status",
+      "field_path": "students.status",
+      "canonical_name": "students_status",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.student_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.911224",
+    "field_name": "students.student_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "students.student_id",
+      "field_path": "students.student_id",
+      "canonical_name": "students_student_id",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.student_id",
+      "key_relationships": {
+        "primary_key": "students.student_id",
+        "foreign_keys": [
+          {
+            "field": "students.student_id",
+            "references": "students",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "courses.title": {
+    "creation_timestamp": "2026-04-18T15:11:19.911224",
+    "field_name": "courses.title",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "courses.title",
+      "field_path": "courses.title",
+      "canonical_name": "courses_title",
+      "data_type": "str",
+      "nest_level": 2,
+      "parent": "courses",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "courses",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "courses",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "placements.top_recruiters": {
+    "creation_timestamp": "2026-04-18T15:11:19.911224",
+    "field_name": "placements.top_recruiters",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "list"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "list",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "placements.top_recruiters",
+      "field_path": "placements.top_recruiters",
+      "canonical_name": "placements_top_recruiters",
+      "data_type": "list",
+      "nest_level": 2,
+      "parent": "placements",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "placements",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "placements",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": true
+    }
+  },
+  "placements.total_eligible": {
+    "creation_timestamp": "2026-04-18T15:11:19.911224",
+    "field_name": "placements.total_eligible",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "placements.total_eligible",
+      "field_path": "placements.total_eligible",
+      "canonical_name": "placements_total_eligible",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "placements",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "placements",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "placements",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "stats.total_faculty": {
+    "creation_timestamp": "2026-04-18T15:11:19.911224",
+    "field_name": "stats.total_faculty",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "stats.total_faculty",
+      "field_path": "stats.total_faculty",
+      "canonical_name": "stats_total_faculty",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "stats",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "stats",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "stats",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "stats.total_students": {
+    "creation_timestamp": "2026-04-18T15:11:19.911224",
+    "field_name": "stats.total_students",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "stats.total_students",
+      "field_path": "stats.total_students",
+      "canonical_name": "stats_total_students",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "stats",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "stats",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "stats",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "students.year": {
+    "creation_timestamp": "2026-04-18T15:11:19.912224",
+    "field_name": "students.year",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.975744",
+    "structural_profile": {
+      "field": "students.year",
+      "field_path": "students.year",
+      "canonical_name": "students_year",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "students",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "students",
+      "foreign_key": "students.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "students.program_id",
+            "references": "students",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "placements.year": {
+    "creation_timestamp": "2026-04-18T15:11:19.912224",
+    "field_name": "placements.year",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.976745",
+    "structural_profile": {
+      "field": "placements.year",
+      "field_path": "placements.year",
+      "canonical_name": "placements_year",
+      "data_type": "int",
+      "nest_level": 2,
+      "parent": "placements",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "placements",
+      "foreign_key": "courses.course_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "courses.course_id",
+            "references": "placements",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "programs.duration_years": {
+    "creation_timestamp": "2026-04-18T15:11:19.912224",
+    "field_name": "programs.duration_years",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.976745",
+    "structural_profile": {
+      "field": "programs.duration_years",
+      "field_path": "programs.duration_years",
+      "canonical_name": "programs_duration_years",
+      "data_type": "int",
+      "nest_level": 3,
+      "parent": "programs",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "programs",
+      "foreign_key": "programs.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "programs.program_id",
+            "references": "programs",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "programs.level": {
+    "creation_timestamp": "2026-04-18T15:11:19.912224",
+    "field_name": "programs.level",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": true,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.976745",
+    "structural_profile": {
+      "field": "programs.level",
+      "field_path": "programs.level",
+      "canonical_name": "programs_level",
+      "data_type": "str",
+      "nest_level": 3,
+      "parent": "programs",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "programs",
+      "foreign_key": "programs.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "programs.program_id",
+            "references": "programs",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "programs.name": {
+    "creation_timestamp": "2026-04-18T15:11:19.912224",
+    "field_name": "programs.name",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "sensitive",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "user_management",
+      "privacy_level": "pii",
+      "retention_policy": "7_years",
+      "compliance_tags": [
+        "GDPR",
+        "CCPA"
+      ]
+    },
+    "last_updated": "2026-04-18T15:11:19.976745",
+    "structural_profile": {
+      "field": "programs.name",
+      "field_path": "programs.name",
+      "canonical_name": "programs_name",
+      "data_type": "str",
+      "nest_level": 3,
+      "parent": "programs",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "programs",
+      "foreign_key": "programs.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "programs.program_id",
+            "references": "programs",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "programs.program_id": {
+    "creation_timestamp": "2026-04-18T15:11:19.912224",
+    "field_name": "programs.program_id",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "str"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "str",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": true,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "critical",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "primary_or_unique",
+        "reasoning": "Identifier field - excellent for indexing"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.976745",
+    "structural_profile": {
+      "field": "programs.program_id",
+      "field_path": "programs.program_id",
+      "canonical_name": "programs_program_id",
+      "data_type": "str",
+      "nest_level": 3,
+      "parent": "programs",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "programs",
+      "foreign_key": "programs.program_id",
+      "key_relationships": {
+        "primary_key": "programs.program_id",
+        "foreign_keys": [
+          {
+            "field": "programs.program_id",
+            "references": "programs",
+            "relationship": "identifier"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "programs.seats": {
+    "creation_timestamp": "2026-04-18T15:11:19.912224",
+    "field_name": "programs.seats",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.976745",
+    "structural_profile": {
+      "field": "programs.seats",
+      "field_path": "programs.seats",
+      "canonical_name": "programs_seats",
+      "data_type": "int",
+      "nest_level": 3,
+      "parent": "programs",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "programs",
+      "foreign_key": "programs.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "programs.program_id",
+            "references": "programs",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  },
+  "programs.tuition_per_year_usd": {
+    "creation_timestamp": "2026-04-18T15:11:19.913223",
+    "field_name": "programs.tuition_per_year_usd",
+    "placement_decision": "sql",
+    "data_profile": {
+      "total_records": 63.0,
+      "frequency": 1.0,
+      "unique_count": 0,
+      "uniqueness_ratio": 0.0,
+      "is_unique_field": false,
+      "has_nested_data": true,
+      "composite_score": 0.8,
+      "stability_score": 1.0
+    },
+    "type_analysis": {
+      "detected_types": [
+        "int"
+      ],
+      "type_count": 1,
+      "has_type_ambiguity": false,
+      "ambiguity_score": 0.0,
+      "primary_type": "int",
+      "type_consistency": 1.0
+    },
+    "semantic_analysis": {
+      "detected_kind": "unknown",
+      "semantic_weight": 0.0,
+      "pattern_confidence": 0.0,
+      "is_identifier": false,
+      "is_measurement": false,
+      "is_categorical": true,
+      "data_classification": "internal",
+      "avg_length": 0,
+      "max_length": 0,
+      "is_long_text": false
+    },
+    "placement_reasoning": {
+      "reason": "schema_registry_sync",
+      "confidence": 1.0,
+      "decision_factors": {
+        "source": "schema_registry",
+        "schema_id": 1
+      },
+      "override_applied": false,
+      "manual_review_needed": false
+    },
+    "drift_tracking": {
+      "drift_score": 0.0,
+      "should_quarantine": false,
+      "quarantine_reason": "stable",
+      "drift_history": [],
+      "stability_trend": "stable"
+    },
+    "quality_metrics": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "validity": 0.5,
+      "accuracy_estimate": 0.8,
+      "data_quality_score": 0.835
+    },
+    "usage_statistics": {
+      "access_frequency": "high",
+      "criticality": "important",
+      "business_importance": "medium",
+      "query_optimization_potential": "moderate",
+      "indexing_recommendation": {
+        "should_index": true,
+        "index_type": "standard",
+        "reasoning": "High frequency - likely queried often"
+      }
+    },
+    "schema_evolution": [],
+    "business_context": {
+      "domain": "general",
+      "privacy_level": "standard",
+      "retention_policy": "indefinite",
+      "compliance_tags": []
+    },
+    "last_updated": "2026-04-18T15:11:19.976745",
+    "structural_profile": {
+      "field": "programs.tuition_per_year_usd",
+      "field_path": "programs.tuition_per_year_usd",
+      "canonical_name": "programs_tuition_per_year_usd",
+      "data_type": "int",
+      "nest_level": 3,
+      "parent": "programs",
+      "storage": "SQL",
+      "storage_engine": "sql",
+      "table_or_collection": "programs",
+      "foreign_key": "programs.program_id",
+      "key_relationships": {
+        "primary_key": null,
+        "foreign_keys": [
+          {
+            "field": "programs.program_id",
+            "references": "programs",
+            "relationship": "foreign_key"
+          }
+        ]
+      },
+      "is_array": false
+    }
+  }
+}

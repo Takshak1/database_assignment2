@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "iterations": 20,
+    "mode": "execute",
+    "mysql_host": "localhost",
+    "mongo_host": "localhost"
+  },
+  "logical": {
+    "read_avg_ms": 52.847,
+    "nested_read_avg_ms": 79.71,
+    "update_avg_ms": 164.356,
+    "throughput_ops_per_sec": 10.104
+  },
+  "direct": {
+    "sql_read_avg_ms": 6.6,
+    "mongo_read_avg_ms": 33.055,
+    "sql_update_avg_ms": 7.958,
+    "mongo_update_avg_ms": 36.409,
+    "mixed_update_avg_ms": 44.367,
+    "sql_throughput_ops_per_sec": 137.375,
+    "mongo_throughput_ops_per_sec": 28.792
+  },
+  "overhead": {
+    "read": {
+      "absolute_ms": 46.247,
+      "relative_percent": 700.682
+    },
+    "nested_read": {
+      "absolute_ms": 46.656,
+      "relative_percent": 141.146
+    },
+    "update": {
+      "absolute_ms": 119.989,
+      "relative_percent": 270.444
+    }
+  },
+  "throughput_curve": {
+    "workloads": [
+      1,
+      2,
+      5,
+      10,
+      20
+    ],
+    "logical_ops_per_sec": [
+      9.1,
+      9.639,
+      9.943,
+      10.177,
+      10.104
+    ],
+    "direct_sql_ops_per_sec": [
+      156.831,
+      162.864,
+      158.713,
+      151.164,
+      151.51
+    ],
+    "direct_mongo_ops_per_sec": [
+      49.145,
+      34.939,
+      35.761,
+      32.609,
+      30.253
+    ],
+    "direct_sql_update_ops_per_sec": [
+      126.907,
+      130.548,
+      124.319,
+      125.726,
+      125.653
+    ],
+    "direct_mongo_update_ops_per_sec": [
+      38.444,
+      29.814,
+      27.182,
+      27.521,
+      27.466
+    ]
+  },
+  "summary_table": [
+    {
+      "scenario": "User Retrieval (Logical vs Direct SQL)",
+      "logical_avg_ms": 52.847,
+      "direct_avg_ms": 6.6,
+      "overhead": {
+        "absolute_ms": 46.247,
+        "relative_percent": 700.682
+      }
+    },
+    {
+      "scenario": "Nested Access (Logical vs Direct Mongo)",
+      "logical_avg_ms": 79.71,
+      "direct_avg_ms": 33.055,
+      "overhead": {
+        "absolute_ms": 46.656,
+        "relative_percent": 141.146
+      }
+    },
+    {
+      "scenario": "Cross-Entity Update (Logical vs Direct Mixed)",
+      "logical_avg_ms": 164.356,
+      "direct_avg_ms": 44.367,
+      "overhead": {
+        "absolute_ms": 119.989,
+        "relative_percent": 270.444
+      }
+    }
+  ]
+}

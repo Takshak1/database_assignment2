@@ -10,8 +10,10 @@ import json
 import os
 import re
 import uuid
+import base64
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, Form
@@ -40,6 +42,7 @@ class QueryRecord:
     logical_result: List[Dict[str, Any]]
     summary: Dict[str, Any]
     timestamp: str
+    duration_ms: float = 0.0
 
 
 @dataclass
@@ -61,6 +64,10 @@ def _safe(value: Any) -> str:
 
 def _json_pretty(value: Any) -> str:
     return json.dumps(value, indent=2, ensure_ascii=False, default=str)
+
+
+def _utc_now() -> datetime:
+    return datetime.utcnow()
 
 
 def _parse_filters(raw: Optional[str]) -> Dict[str, Any]:
@@ -102,8 +109,109 @@ def _default_preview_execute() -> bool:
     return os.getenv("DASHBOARD_PREVIEW_EXECUTE", "1").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _perf_artifact_dir() -> Path:
+    return Path(__file__).resolve().parent / "docs" / "perf_artifacts"
+
+
+def _read_json_artifact(path: Path) -> Optional[Dict[str, Any]]:
+    if not path.exists():
+        return None
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            data = json.load(handle)
+            return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def _perf_summary_artifact() -> Optional[Dict[str, Any]]:
+    return _read_json_artifact(_perf_artifact_dir() / "assignment4_perf_summary.json")
+
+
+def _normalize_storage_backend(raw_value: Any) -> str:
+    token = str(raw_value or "").strip().lower()
+    if token in {"sql", "mysql", "relational", "rdbms"}:
+        return "sql"
+    if token in {"mongo", "mongodb", "document", "nosql", "embed", "embedded", "reference"}:
+        return "mongo"
+    if token in {"buffer", "cache", "queue"}:
+        return "buffer"
+    return "unknown"
+
+
+def _distribution_from_schema(schema: Dict[str, Any]) -> Dict[str, int]:
+    counts = {"sql": 0, "mongo": 0, "buffer": 0, "unknown": 0}
+    storage_strategy = schema.get("storage_strategy") or {}
+    field_mappings = ((storage_strategy.get("mappings") or {}).get("fields") or []) if isinstance(storage_strategy, dict) else []
+
+    if field_mappings:
+        for mapping in field_mappings:
+            backend = _normalize_storage_backend(mapping.get("decision") or mapping.get("storage"))
+            counts[backend] += 1
+        return counts
+
+    for field in schema.get("fields", []):
+        backend = _normalize_storage_backend(field.get("storage_strategy") or field.get("decision") or field.get("storage"))
+        counts[backend] += 1
+    return counts
+
+
+def _live_distribution_from_registry(schema_ids: Optional[List[int]] = None) -> Dict[str, Any]:
+    all_schemas = registry.list_schemas()
+    if not all_schemas:
+        return {
+            "source": "none",
+            "distribution": {"sql": 0, "mongo": 0, "buffer": 0, "unknown": 0},
+            "entities": [],
+        }
+
+    selected: List[Dict[str, Any]] = []
+    selected_ids = {int(sid) for sid in (schema_ids or []) if isinstance(sid, int) and sid > 0}
+    if selected_ids:
+        for item in all_schemas:
+            try:
+                if int(item.get("schema_id")) in selected_ids:
+                    selected.append(item)
+            except Exception:
+                continue
+
+    if not selected:
+        selected = list(all_schemas)
+
+    totals = {"sql": 0, "mongo": 0, "buffer": 0, "unknown": 0}
+    entities: List[str] = []
+    for item in selected:
+        try:
+            schema = registry.get_schema(int(item["schema_id"]))
+        except Exception:
+            continue
+        entity_name = str(item.get("entity_name") or f"schema_{item.get('schema_id')}")
+        entities.append(entity_name)
+        counts = _distribution_from_schema(schema)
+        for key in totals:
+            totals[key] += int(counts.get(key, 0) or 0)
+
+    source_label = "registry:queried_entities" if selected_ids else "registry:all_entities"
+    return {
+        "source": source_label,
+        "distribution": totals,
+        "entities": sorted(set(entities)),
+    }
+
+
+def _image_data_uri(path: Path) -> Optional[str]:
+    if not path.exists():
+        return None
+    try:
+        raw = path.read_bytes()
+        encoded = base64.b64encode(raw).decode("ascii")
+        return f"data:image/png;base64,{encoded}"
+    except Exception:
+        return None
+
+
 def _sanitize_error() -> str:
-    return "Execution failed due to backend unavailability or configuration. Try dry-run mode to validate logical queries."
+    return "Execution failed due to system unavailability or configuration. Try dry-run mode to validate logical queries."
 
 
 def _test_connections() -> Dict[str, Any]:
@@ -169,6 +277,7 @@ def _sql_fk_violations() -> Dict[str, Any]:
         cursor = conn.cursor()
         violations: List[Dict[str, Any]] = []
         skipped_relations: List[Dict[str, Any]] = []
+        seen_relations: set[tuple[str, str, str, str]] = set()
         cursor.execute("SHOW TABLES")
         existing_tables = {
             _normalize_table_lookup_name(row[0])
@@ -177,8 +286,9 @@ def _sql_fk_violations() -> Dict[str, Any]:
         }
         for schema in registry.list_schemas():
             detail = registry.get_schema(schema["schema_id"])
+            entity_name = str(detail.get("entity_name") or "").strip().lower()
             blueprint = detail.get("sql_blueprint") or detail.get("analysis", {}).get("sql_blueprint")
-            if not blueprint:
+            if entity_name != "university" or not blueprint:
                 continue
             for relation in blueprint.get("relationships", []):
                 child = relation.get("from_table")
@@ -187,6 +297,15 @@ def _sql_fk_violations() -> Dict[str, Any]:
                 parent_col = relation.get("to_column")
                 if not all([child, parent, child_col, parent_col]):
                     continue
+                signature = (
+                    _normalize_table_lookup_name(child),
+                    _normalize_table_lookup_name(parent),
+                    str(child_col).lower(),
+                    str(parent_col).lower(),
+                )
+                if signature in seen_relations:
+                    continue
+                seen_relations.add(signature)
                 if not _is_sql_table_available(existing_tables, child) or not _is_sql_table_available(existing_tables, parent):
                     skipped_relations.append({
                         "child_table": child,
@@ -287,17 +406,54 @@ def _acid_report() -> Dict[str, Any]:
             row = cursor.fetchone()
             cursor.close()
             conn.close()
-            isolation_info = {"ok": True, "level": row[0] if row else "unknown"}
+            actual_level_raw = (row[0] if row else "unknown")
+            actual_level = str(actual_level_raw).strip().replace("_", "-").upper()
+            required_level = os.getenv("REQUIRED_ISOLATION_LEVEL", "REPEATABLE-READ").strip().replace("_", "-").upper()
+            isolation_rank = {
+                "READ-UNCOMMITTED": 1,
+                "READ-COMMITTED": 2,
+                "REPEATABLE-READ": 3,
+                "SERIALIZABLE": 4,
+            }
+            actual_rank = isolation_rank.get(actual_level)
+            required_rank = isolation_rank.get(required_level)
+            if actual_rank is None or required_rank is None:
+                isolation_info = {
+                    "ok": False,
+                    "level": actual_level_raw,
+                    "required_level": required_level,
+                    "error": "unknown isolation level comparison",
+                }
+            elif actual_rank >= required_rank:
+                isolation_info = {
+                    "ok": True,
+                    "level": actual_level_raw,
+                    "required_level": required_level,
+                }
+            else:
+                isolation_info = {
+                    "ok": False,
+                    "level": actual_level_raw,
+                    "required_level": required_level,
+                    "error": "isolation level below required policy",
+                }
         except Exception as exc:  # pragma: no cover
             isolation_info = {"ok": False, "error": str(exc)}
 
-    atomicity_ok = os.getenv("TRANSACTION_COORDINATION", "1").strip().lower() in {"1", "true", "yes", "on"}
+    tx_coord_enabled = os.getenv("TRANSACTION_COORDINATION", "1").strip().lower() in {"1", "true", "yes", "on"}
+    tx_prereq_ok = bool(sql_counts.get("ok")) and bool(mongo_counts.get("ok")) and bool(isolation_info.get("ok"))
+    atomicity_ok = tx_coord_enabled and tx_prereq_ok
+    atomicity_note = "SQL transaction + Mongo session/compensating rollback"
+    if not tx_coord_enabled:
+        atomicity_note += " (disabled by TRANSACTION_COORDINATION)"
+    elif not tx_prereq_ok:
+        atomicity_note += " (backend transaction prerequisites unavailable)"
     consistency_ok = fk_report.get("ok") and fk_report.get("total_missing", 0) == 0
 
     return {
         "atomicity": {
             "enabled": atomicity_ok,
-            "note": "SQL transaction + Mongo session/compensating rollback",
+            "note": atomicity_note,
         },
         "consistency": {
             "fk_violations": fk_report,
@@ -321,15 +477,15 @@ def _summarize_write(details: Dict[str, Any]) -> Dict[str, Any]:
     sql = details.get("sql") if isinstance(details, dict) else None
     mongo = details.get("mongo") if isinstance(details, dict) else None
 
+    inserted_total = 0
     if isinstance(sql, dict):
-        rows_inserted = sql.get("rows_inserted")
-        if rows_inserted is not None:
-            summary["sql_rows_inserted"] = rows_inserted
+        inserted_total += int(sql.get("rows_inserted") or 0)
 
     if isinstance(mongo, dict):
-        docs_inserted = mongo.get("documents_inserted")
-        if docs_inserted is not None:
-            summary["mongo_documents_inserted"] = docs_inserted
+        inserted_total += int(mongo.get("documents_inserted") or 0)
+
+    if inserted_total:
+        summary["inserted_items"] = inserted_total
 
     if isinstance(details, dict) and details.get("strategy"):
         summary["strategy"] = details.get("strategy")
@@ -341,10 +497,6 @@ def _plan_summary(plan: Dict[str, Any]) -> Dict[str, Any]:
     field_locations = plan.get("field_locations") or []
     resolved = [loc for loc in field_locations if _is_field_status_resolved(loc.get("status"))]
     missing = [loc for loc in field_locations if loc.get("status") == "missing"]
-    sql_fields = [loc.get("requested") for loc in resolved if loc.get("storage") == "sql"]
-    mongo_fields = [loc.get("requested") for loc in resolved if loc.get("storage") == "mongo"]
-    sql_required = bool(plan.get("sql")) or bool(sql_fields)
-    mongo_required = bool(plan.get("mongo")) or bool(mongo_fields)
     merge_key = None
     if isinstance(plan.get("merge"), dict):
         merge_key = plan.get("merge", {}).get("merge_key")
@@ -352,20 +504,8 @@ def _plan_summary(plan: Dict[str, Any]) -> Dict[str, Any]:
         "requested_fields": [loc.get("requested") for loc in field_locations],
         "resolved_fields": len(resolved),
         "missing_fields": len(missing),
-        "uses_sql": sql_required,
-        "uses_mongo": mongo_required,
         "merge_key_present": bool(merge_key),
-        "merge_required": bool(merge_key) and bool(sql_fields) and bool(mongo_fields),
-        "backend_flow": {
-            "sql": {
-                "enabled": sql_required,
-                "logical_fields": sql_fields,
-            },
-            "mongo": {
-                "enabled": mongo_required,
-                "logical_fields": mongo_fields,
-            },
-        },
+        "merge_required": bool(merge_key),
     }
 
 
@@ -384,36 +524,27 @@ def _logical_plan_view(plan: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     if not plan:
         return {
             "requested_fields": [],
-            "sql_resolved_fields": [],
-            "mongo_resolved_fields": [],
-            "buffer_resolved_fields": [],
+            "resolved_fields": [],
             "missing_fields": [],
-            "merge_key_used": None,
         }
 
     field_locations = plan.get("field_locations") or []
     requested = [loc.get("requested") for loc in field_locations if loc.get("requested")]
-    sql_fields = [loc.get("requested") for loc in field_locations if loc.get("storage") == "sql" and loc.get("requested")]
-    mongo_fields = [loc.get("requested") for loc in field_locations if loc.get("storage") == "mongo" and loc.get("requested")]
-    buffer_fields = [loc.get("requested") for loc in field_locations if loc.get("storage") == "buffer" and loc.get("requested")]
+    resolved_fields = [
+        loc.get("requested")
+        for loc in field_locations
+        if _is_field_status_resolved(loc.get("status")) and loc.get("requested")
+    ]
     missing_fields = [
         loc.get("requested")
         for loc in field_locations
         if loc.get("status") == "missing" and loc.get("requested")
     ]
 
-    merge_key = None
-    merge_plan = plan.get("merge")
-    if isinstance(merge_plan, dict):
-        merge_key = merge_plan.get("merge_key")
-
     return {
         "requested_fields": requested,
-        "sql_resolved_fields": sql_fields,
-        "mongo_resolved_fields": mongo_fields,
-        "buffer_resolved_fields": buffer_fields,
+        "resolved_fields": resolved_fields,
         "missing_fields": missing_fields,
-        "merge_key_used": merge_key,
     }
 
 
@@ -432,13 +563,11 @@ def _explainability_badges(plan: Optional[Dict[str, Any]]) -> List[Dict[str, str
     badges: List[Dict[str, str]] = []
     for loc in plan.get("field_locations") or []:
         field_name = str(loc.get("requested") or "unknown")
-        storage = str(loc.get("storage") or "unknown").lower()
         note = str(loc.get("notes") or "")
         reason = note_map.get(note, note or "routing rule")
         badges.append(
             {
                 "field": field_name,
-                "storage": storage,
                 "reason": reason,
                 "status": str(loc.get("status") or "unknown"),
             }
@@ -483,6 +612,8 @@ def _describe_sql_zero_match_reason(details: Dict[str, Any]) -> Optional[str]:
 
     where_clause = str(sql_plan.get("where") or "")
     parameters = sql_plan.get("parameters") or []
+    if isinstance(parameters, dict):
+        parameters = list(parameters.values())
     if not where_clause or not parameters:
         return None
 
@@ -552,22 +683,22 @@ def _build_empty_read_reason(details: Dict[str, Any]) -> str:
     merge_required = bool(uses_sql and uses_mongo and merge_key)
 
     if merge_required and sql_rows > 0 and mongo_documents == 0:
-        return f"SQL returned rows, but no matching Mongo documents were found for merge key '{merge_key}'."
+        return f"Partial logical fragments were found, but merge key '{merge_key}' did not produce complete records."
     if merge_required and mongo_documents > 0 and sql_rows == 0:
-        return f"Mongo returned documents, but no matching SQL rows were found for merge key '{merge_key}'."
+        return f"Partial logical fragments were found, but merge key '{merge_key}' did not produce complete records."
 
     if uses_sql and uses_mongo and sql_rows == 0 and mongo_documents == 0:
-        return "No SQL rows or Mongo documents matched the current filters."
+        return "No records matched the current filters."
     if uses_sql and not uses_mongo and sql_rows == 0:
         sql_hint = _describe_sql_zero_match_reason(details)
         if sql_hint:
             return sql_hint
-        return "No SQL rows matched the current filters."
+        return "No records matched the current filters."
     if uses_mongo and not uses_sql and mongo_documents == 0:
-        return "No Mongo documents matched the current filters."
+        return "No records matched the current filters."
 
     if uses_sql and uses_mongo:
-        return "Data was fetched from SQL/Mongo, but no merged logical records were produced."
+        return "Data was fetched, but no merged logical records were produced."
 
     return "No logical results returned."
 
@@ -578,23 +709,129 @@ def _format_field_chips(items: List[str]) -> str:
     return " ".join(f"<span class='chip'>{_safe(item)}</span>" for item in items)
 
 
+def _default_read_fields(schema_id: int) -> List[str]:
+    try:
+        schema = registry.get_schema(schema_id)
+    except Exception:
+        return []
+
+    fields: List[str] = []
+    seen: set[str] = set()
+    for field in schema.get("fields", []):
+        field_name = field.get("field_path") or field.get("field_name")
+        if field_name:
+            normalized = str(field_name)
+            if normalized not in seen:
+                seen.add(normalized)
+                fields.append(normalized)
+
+    for entry in (schema.get("mongo_strategy") or {}).get("entries", []):
+        field_name = entry.get("field_path")
+        if field_name:
+            normalized = str(field_name)
+            if normalized not in seen:
+                seen.add(normalized)
+                fields.append(normalized)
+
+    return fields
+
+
+def _render_logical_result_table(
+    rows: List[Dict[str, Any]],
+    empty_message: str = "No logical results returned.",
+    preferred_columns: Optional[List[str]] = None,
+) -> str:
+    if not rows:
+        return f"<p class='muted'>{_safe(empty_message)}</p>"
+
+    visible_rows: List[Dict[str, Any]] = []
+    for row in rows:
+        if isinstance(row, dict):
+            visible_rows.append(row)
+        else:
+            visible_rows.append({"value": row})
+
+    columns: List[str] = []
+    for column in preferred_columns or []:
+        if column and column not in columns:
+            columns.append(str(column))
+    for row in visible_rows:
+        for key in row.keys():
+            if key not in columns:
+                columns.append(str(key))
+
+    cells = []
+    for row in visible_rows:
+        row_cells = []
+        for column in columns:
+            value = row.get(column, "")
+            if isinstance(value, (dict, list)):
+                cell_text = _json_pretty(value)
+            else:
+                cell_text = str(value)
+            row_cells.append(f"<td><pre class='cell-pre'>{_safe(cell_text)}</pre></td>")
+        cells.append(f"<tr>{''.join(row_cells)}</tr>")
+
+    header = "".join(f"<th>{_safe(column)}</th>" for column in columns)
+    return f"""
+<table class='result-table'>
+  <thead><tr>{header}</tr></thead>
+  <tbody>{''.join(cells)}</tbody>
+</table>
+"""
+
+
+def _render_logical_result(record: QueryRecord) -> str:
+    operation = _query_operation(record)
+    if operation == "read":
+        empty_message = str((record.summary or {}).get("note") or "No logical results returned.")
+        plan_view = (record.summary or {}).get("logical_plan") or {}
+        preferred_columns = plan_view.get("requested_fields") or (record.query_input or {}).get("fields") or []
+        return _render_logical_result_table(
+            record.logical_result,
+            empty_message=empty_message,
+            preferred_columns=[str(field) for field in preferred_columns if str(field).strip()],
+        )
+    return f"<pre>{_safe(_json_pretty(record.logical_result))}</pre>"
+
+
+def _extract_read_results(details: Dict[str, Any]) -> List[Dict[str, Any]]:
+    if not isinstance(details, dict):
+        return []
+
+    candidates: List[Any] = [
+        details.get("results"),
+        details.get("logical_result"),
+        details.get("rows"),
+        details.get("merged_results"),
+    ]
+    nested_data = details.get("data")
+    if isinstance(nested_data, dict):
+        candidates.append(nested_data.get("results"))
+
+    for candidate in candidates:
+        if isinstance(candidate, list):
+            normalized: List[Dict[str, Any]] = []
+            for item in candidate:
+                if isinstance(item, dict):
+                    normalized.append(item)
+                else:
+                    normalized.append({"value": item})
+            return normalized
+
+    return []
+
+
 def _render_query_explainability(record: QueryRecord) -> str:
     summary = record.summary or {}
     plan_view = summary.get("logical_plan") or {}
     badges = summary.get("explainability") or []
-    backend_ops = summary.get("backend_operations") or {}
+    before_after_logical_result = _render_logical_result(record)
 
     badge_rows = []
     for badge in badges:
-        storage = str(badge.get("storage") or "unknown").lower()
-        css = {
-            "sql": "storage-sql",
-            "mongo": "storage-mongo",
-            "buffer": "storage-buffer",
-        }.get(storage, "storage-unknown")
         badge_rows.append(
             f"<tr><td>{_safe(badge.get('field'))}</td>"
-            f"<td><span class='badge {css}'>{_safe(storage.upper())}</span></td>"
             f"<td>{_safe(badge.get('reason'))}</td>"
             f"<td>{_safe(badge.get('status'))}</td></tr>"
         )
@@ -605,7 +842,7 @@ def _render_query_explainability(record: QueryRecord) -> str:
 <div class='card'>
   <h3>Explainability Badges</h3>
   <table>
-    <thead><tr><th>Field</th><th>Storage</th><th>Why routed</th><th>Status</th></tr></thead>
+        <thead><tr><th>Field</th><th>Why routed</th><th>Status</th></tr></thead>
     <tbody>{''.join(badge_rows)}</tbody>
   </table>
 </div>
@@ -613,28 +850,111 @@ def _render_query_explainability(record: QueryRecord) -> str:
 
     return f"""
 <div class='card'>
-  <h3>Logical Plan View</h3>
-  <p><strong>Requested fields:</strong> {_format_field_chips(plan_view.get('requested_fields', []))}</p>
-  <p><strong>SQL-resolved fields:</strong> {_format_field_chips(plan_view.get('sql_resolved_fields', []))}</p>
-  <p><strong>Mongo-resolved fields:</strong> {_format_field_chips(plan_view.get('mongo_resolved_fields', []))}</p>
-  <p><strong>Buffer-resolved fields:</strong> {_format_field_chips(plan_view.get('buffer_resolved_fields', []))}</p>
-  <p><strong>Missing fields:</strong> {_format_field_chips(plan_view.get('missing_fields', []))}</p>
-  <p><strong>Merge key used:</strong> {_safe(plan_view.get('merge_key_used') or 'None')}</p>
+    <h3>Logical Plan View</h3>
+    <p><strong>Requested fields:</strong> {_format_field_chips(plan_view.get('requested_fields', []))}</p>
+    <p><strong>Resolved fields:</strong> {_format_field_chips(plan_view.get('resolved_fields', []))}</p>
+    <p><strong>Missing fields:</strong> {_format_field_chips(plan_view.get('missing_fields', []))}</p>
 </div>
 {explainability_table}
 <div class='card'>
-  <details>
-    <summary><strong>Before/After Example (click to expand)</strong></summary>
-    <p class='muted'>user query → logical result → backend operations</p>
-    <h4>User query</h4>
-    <pre>{_safe(_json_pretty(record.query_input))}</pre>
-    <h4>Logical result</h4>
-    <pre>{_safe(_json_pretty(record.logical_result))}</pre>
-    <h4>Backend operations</h4>
-    <pre>{_safe(_json_pretty(backend_ops))}</pre>
-  </details>
+    <details>
+        <summary><strong>Before/After Example (click to expand)</strong></summary>
+        <p class='muted'>user query -> logical result</p>
+        <h4>User query</h4>
+        <pre>{_safe(_json_pretty(record.query_input))}</pre>
+        <h4>Logical result</h4>
+        {before_after_logical_result}
+    </details>
 </div>
 """
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        if value is None or value == "":
+            return default
+        return int(value)
+    except Exception:
+        return default
+
+
+def _query_operation(record: QueryRecord) -> str:
+    return str((record.query_input or {}).get("operation") or "read").lower()
+
+
+def _aggregate_query_metrics(records: List[QueryRecord]) -> Dict[str, Any]:
+    if not records:
+        return {
+            "total_queries": 0,
+            "success_queries": 0,
+            "failed_queries": 0,
+            "avg_latency_ms": 0.0,
+            "p95_latency_ms": 0.0,
+            "throughput_qps": 0.0,
+            "operation_breakdown": {},
+        }
+
+    latencies = sorted(float(r.duration_ms or 0.0) for r in records)
+    total = len(records)
+    success = sum(1 for r in records if r.status == "ok")
+    failed = total - success
+    avg_latency = sum(latencies) / total if total else 0.0
+    p95_idx = max(0, min(total - 1, int(0.95 * total) - 1))
+    p95_latency = latencies[p95_idx]
+
+    parsed_times: List[datetime] = []
+    for record in records:
+        try:
+            parsed_times.append(datetime.fromisoformat(record.timestamp))
+        except Exception:
+            continue
+
+    throughput_qps = 0.0
+    if len(parsed_times) >= 2:
+        parsed_times.sort()
+        window = (parsed_times[-1] - parsed_times[0]).total_seconds()
+        if window > 0:
+            throughput_qps = total / window
+
+    breakdown: Dict[str, Dict[str, int]] = {}
+    for record in records:
+        op = _query_operation(record)
+        status_bucket = breakdown.setdefault(op, {"ok": 0, "failed": 0, "total": 0})
+        status_bucket["total"] += 1
+        if record.status == "ok":
+            status_bucket["ok"] += 1
+        else:
+            status_bucket["failed"] += 1
+
+    return {
+        "total_queries": total,
+        "success_queries": success,
+        "failed_queries": failed,
+        "avg_latency_ms": round(avg_latency, 3),
+        "p95_latency_ms": round(p95_latency, 3),
+        "throughput_qps": round(throughput_qps, 3),
+        "operation_breakdown": breakdown,
+    }
+
+
+def _filter_query_records(
+    records: List[QueryRecord],
+    status: Optional[str],
+    operation: Optional[str],
+    limit: Optional[int],
+) -> List[QueryRecord]:
+    status_filter = (status or "all").strip().lower()
+    operation_filter = (operation or "all").strip().lower()
+
+    filtered = records
+    if status_filter in {"ok", "failed"}:
+        filtered = [record for record in filtered if record.status == status_filter]
+    if operation_filter in {"read", "insert", "update", "delete"}:
+        filtered = [record for record in filtered if _query_operation(record) == operation_filter]
+
+    if limit is not None and limit > 0:
+        filtered = filtered[:limit]
+    return filtered
 
 
 registry = SchemaRegistry(db_path=os.getenv("SCHEMA_REGISTRY_DB", "schema_registry.db"))
@@ -668,6 +988,22 @@ def _entity_fields(schema: Dict[str, Any]) -> List[Dict[str, Any]]:
     return results
 
 
+def _resolve_entity_context(schema_id: int) -> Dict[str, Any]:
+    try:
+        schema = registry.get_schema(schema_id)
+    except Exception:
+        return {
+            "schema_id": schema_id,
+            "logical_entity": "unknown",
+        }
+
+    entity_name = schema.get("entity_name") or "unknown"
+    return {
+        "schema_id": schema_id,
+        "logical_entity": entity_name,
+    }
+
+
 def _run_query(
     schema_id: int,
     fields: List[str],
@@ -677,13 +1013,19 @@ def _run_query(
     *,
     record_history: bool = True,
 ) -> QueryRecord:
+    started_at = _utc_now()
+    entity_context = _resolve_entity_context(schema_id)
     query_input = {
         "operation": "read",
+        **entity_context,
         "fields": fields,
         "filters": filters,
         "limit": limit,
         "execute": execute,
     }
+    effective_fields = list(fields)
+    if not effective_fields:
+        effective_fields = _default_read_fields(schema_id)
     status = "ok"
     logical_result: List[Dict[str, Any]] = []
     summary: Dict[str, Any] = {}
@@ -691,7 +1033,7 @@ def _run_query(
         result = executor.execute(
             schema_id,
             operation="read",
-            fields=fields,
+            fields=effective_fields,
             filters=filters,
             limit=limit,
             execute=execute,
@@ -699,14 +1041,14 @@ def _run_query(
         details = result.details
         plan_summary = _plan_summary(details)
         plan_payload = _extract_plan_payload(details)
-        logical_result = details.get("results") or []
+        logical_result = _extract_read_results(details)
         summary = {
             "items": len(logical_result),
             "note": details.get("note") if not execute else None,
             "plan_summary": plan_summary,
             "logical_plan": _logical_plan_view(plan_payload),
             "explainability": _explainability_badges(plan_payload),
-            "backend_operations": _backend_operations(details),
+            "effective_fields": effective_fields,
         }
         if execute and not logical_result:
             summary["note"] = _build_empty_read_reason(details)
@@ -720,6 +1062,9 @@ def _run_query(
         logical_result=logical_result,
         summary=summary,
         timestamp=_now_iso(),
+        duration_ms=(
+            (_utc_now() - started_at).total_seconds() * 1000.0
+        ),
     )
     if record_history:
         session.queries.append(record)
@@ -737,13 +1082,15 @@ def _run_crud(
     strategy: str,
     execute: bool,
 ) -> QueryRecord:
+    started_at = _utc_now()
     op = (operation or "read").lower()
     if schema_id is None:
         schema_id = _resolve_or_register_entity(entity, payload, op)
     if op == "read":
+        effective_fields = fields or _default_read_fields(schema_id)
         return _run_query(
             schema_id,
-            fields=fields,
+            fields=effective_fields,
             filters=filters,
             limit=limit,
             execute=execute,
@@ -752,6 +1099,7 @@ def _run_crud(
 
     query_input = {
         "operation": op,
+        **_resolve_entity_context(schema_id),
         "fields": fields,
         "payload": payload,
         "filters": filters,
@@ -783,7 +1131,6 @@ def _run_crud(
             **_summarize_write(details),
             "logical_plan": _logical_plan_view(plan_payload),
             "explainability": _explainability_badges(plan_payload),
-            "backend_operations": _backend_operations(details),
         }
     except Exception as exc:
         status = "failed"
@@ -795,6 +1142,9 @@ def _run_crud(
         logical_result=logical_result,
         summary=summary,
         timestamp=_now_iso(),
+        duration_ms=(
+            (_utc_now() - started_at).total_seconds() * 1000.0
+        ),
     )
     session.queries.append(record)
     return record
@@ -818,6 +1168,8 @@ def _html_page(title: str, body: str) -> HTMLResponse:
     a {{ color: #2563eb; text-decoration: none; }}
     table {{ width: 100%; border-collapse: collapse; }}
     th, td {{ text-align: left; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }}
+    .result-table th, .result-table td {{ vertical-align: top; }}
+    .cell-pre {{ background: #f8fafc; color: #111827; margin: 0; padding: 0; white-space: pre-wrap; word-break: break-word; }}
     .badge {{ display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; background: #e5e7eb; font-size: 0.75rem; }}
         .chip {{ display: inline-block; margin: 0.1rem 0.25rem 0.1rem 0; padding: 0.2rem 0.5rem; border-radius: 999px; background: #eef2ff; font-size: 0.8rem; }}
         .storage-sql {{ background: #dbeafe; }}
@@ -831,9 +1183,9 @@ def _html_page(title: str, body: str) -> HTMLResponse:
 </head>
 <body>
   <h1>Logical Dashboard</h1>
-  <p class='muted'>Local host UI for logical entities and queries (backend details hidden).</p>
-  <div class='card'>
-      <a href='/'>Home</a> · <a href='/entities'>Entities</a> · <a href='/crud'>CRUD</a> · <a href='/acid'>ACID Report</a> · <a href='/connections'>Test Connection</a> · <a href='/history'>Query History</a>
+    <p class='muted'>Logical schema interface for sessions, entities, instances, queries, and history.</p>
+        <div class='card'>
+                                                <a href='/'>Active Session</a> · <a href='/entities'>Logical Entities</a> · <a href='/crud'>Logical Query Result</a> · <a href='/monitor'>Query Monitor</a> · <a href='/history'>Query History</a> · <a href='/comparison'>Performance Comparison</a> · <a href='/acid'>Validation Report</a> · <a href='/connections'>Service Check</a>
   </div>
   {body}
 </body>
@@ -845,6 +1197,7 @@ def _html_page(title: str, body: str) -> HTMLResponse:
 @app.get("/", response_class=HTMLResponse)
 def home() -> HTMLResponse:
     entities = _summarize_entities()
+    metrics = _aggregate_query_metrics(session.queries)
     body = f"""
 <div class='card'>
   <h2>Active Session</h2>
@@ -854,7 +1207,43 @@ def home() -> HTMLResponse:
     <div><strong>Registry DB</strong><br />{_safe(session.registry_db)}</div>
     <div><strong>Metadata File</strong><br />{_safe(session.metadata_file)}</div>
   </div>
-  <p class='muted'>Schemas loaded: {len(entities)} · Queries run: {len(session.queries)}</p>
+    <p class='muted'>Schemas loaded: {len(entities)} · Queries run: {len(session.queries)}</p>
+</div>
+
+<div class='card'>
+    <h2>Logical Query Metrics</h2>
+    <div class='grid'>
+        <div><strong>Total Queries</strong><br />{_safe(metrics.get('total_queries'))}</div>
+        <div><strong>Avg Latency (ms)</strong><br />{_safe(metrics.get('avg_latency_ms'))}</div>
+        <div><strong>P95 Latency (ms)</strong><br />{_safe(metrics.get('p95_latency_ms'))}</div>
+        <div><strong>Throughput (QPS)</strong><br />{_safe(metrics.get('throughput_qps'))}</div>
+    </div>
+    <p class='muted'>Monitoring is computed at logical query level and does not expose backend internals.</p>
+</div>
+
+<div class='card'>
+    <h2>System Checks</h2>
+    <p class='muted'>Use these dashboard pages to validate transactional guarantees and logical service availability.</p>
+    <p><a href='/acid'>Open Validation Report</a> · <a href='/connections'>Run Service Check</a></p>
+</div>
+
+<div class='card'>
+    <h2>Performance Comparison</h2>
+    <p class='muted'>View framework vs direct SQL vs direct MongoDB latency/throughput comparison with charts.</p>
+    <p><a href='/comparison'>Open Performance Comparison</a></p>
+</div>
+
+<div class='card'>
+    <h2>Capability Map</h2>
+    <p class='muted'>This dashboard supports all required logical operations:</p>
+    <ul>
+        <li><a href='/'>Viewing active sessions</a></li>
+        <li><a href='/entities'>Listing logical entities within a session</a></li>
+        <li><a href='/entities'>Viewing instances of each entity</a></li>
+        <li><a href='/entities'>Inspecting field names and values of logical objects</a></li>
+        <li><a href='/crud'>Displaying results of executed logical queries</a></li>
+        <li><a href='/history'>Viewing query execution history</a></li>
+    </ul>
 </div>
 """
     return _html_page("Logical Dashboard", body)
@@ -880,7 +1269,8 @@ def list_entities() -> HTMLResponse:
     )
     body = f"""
 <div class='card'>
-  <h2>Logical Entities</h2>
+    <h2>Logical Entities</h2>
+    <p class='muted'>Browse the registered logical models and their visible fields.</p>
   <table>
     <thead>
       <tr><th>ID</th><th>Name</th><th>Fields</th><th>Created</th><th></th></tr>
@@ -941,22 +1331,23 @@ def entity_detail(schema_id: int) -> HTMLResponse:
             if detail:
                 preview_detail = f"<p class='muted'><strong>Reason:</strong> {_safe(detail)}</p>"
         elif not record.logical_result:
-            note = (record.summary or {}).get("note") or "No rows exist yet for this entity in the configured backends."
+            note = (record.summary or {}).get("note") or "No rows exist yet for this entity in the configured data stores."
             preview_detail = f"<p class='muted'><strong>Reason:</strong> {_safe(note)}</p>"
 
-        result_block = _safe(_json_pretty(record.logical_result)) if record.logical_result else "No sample rows returned."
+        result_block = _render_logical_result_table(record.logical_result, "No sample rows returned.")
         preview_html = f"""
 <div class='card'>
   <h3>Sample Instances (logical preview)</h3>
   <p>Status: <span class='badge {'success' if record.status == 'ok' else 'failed'}'>{_safe(record.status)}</span></p>
   {preview_detail}
-  <pre>{result_block}</pre>
+  {result_block}
 </div>
 """
 
     body = f"""
 <div class='card'>
   <h2>Entity: {_safe(schema.get('entity_name'))} (schema_id={schema_id})</h2>
+    <p class='muted'>Inspect field names, types, and sample instances for this logical model.</p>
   <table>
     <thead>
       <tr><th>Field</th><th>Type</th><th>Nullable</th><th>Primary Key</th><th>Unique</th></tr>
@@ -1016,7 +1407,7 @@ def crud_form() -> HTMLResponse:
         <label>Strategy (update/delete)</label><br />
         <input type='text' name='strategy' placeholder='simple or entity/sub-entity' style='width: 100%' /><br /><br />
 
-        <label><input type='checkbox' name='execute' /> Execute against live backends</label><br /><br />
+        <label><input type='checkbox' name='execute' /> Execute against live system</label><br /><br />
         <button type='submit'>Run Operation</button>
     </form>
 </div>
@@ -1063,60 +1454,474 @@ def crud_submit(
     body = f"""
 <div class='card'>
   <h2>CRUD Result</h2>
-  <p>Status: <span class='badge {'success' if record.status == 'ok' else 'failed'}'>{_safe(record.status)}</span></p>
-    <h3>Input</h3>
-    <pre>{_safe(_json_pretty(record.query_input))}</pre>
+    <p>Operation: <span class='badge'>{_safe((record.query_input or {}).get('operation'))}</span> · Status: <span class='badge {'success' if record.status == 'ok' else 'failed'}'>{_safe(record.status)}</span></p>
     <h3>Logical Result</h3>
-    <pre>{_safe(_json_pretty(record.logical_result))}</pre>
-  <h3>Summary</h3>
-    <pre>{_safe(_json_pretty(record.summary))}</pre>
+    {_render_logical_result(record)}
 </div>
-{_render_query_explainability(record)}
 """
     return _html_page("CRUD Result", body)
 
 
 @app.get("/history", response_class=HTMLResponse)
-def query_history() -> HTMLResponse:
-    if not session.queries:
+def query_history(
+    status: str = "all",
+    operation: str = "all",
+    limit: int = 100,
+) -> HTMLResponse:
+    records = _filter_query_records(
+        session.queries[::-1],
+        status=status,
+        operation=operation,
+        limit=_safe_int(limit, 100),
+    )
+
+    if not records:
         return _html_page("Query History", "<div class='card'>No queries executed yet.</div>")
 
     cards = []
-    for record in session.queries[::-1]:
+    for record in records:
+        query_input = record.query_input or {}
+        logical_entity = query_input.get("logical_entity")
+        schema_id = query_input.get("schema_id")
+        fields = query_input.get("fields") if isinstance(query_input.get("fields"), list) else []
+        filters = query_input.get("filters") if isinstance(query_input.get("filters"), dict) else {}
+        limit_value = query_input.get("limit")
+        note = (record.summary or {}).get("note") if isinstance(record.summary, dict) else None
         cards.append(
             f"""
 <div class='card'>
-  <p class='muted'>{_safe(record.timestamp)} · Status: <span class='badge {'success' if record.status == 'ok' else 'failed'}'>{_safe(record.status)}</span></p>
-        <strong>Input</strong>
-        <pre>{_safe(_json_pretty(record.query_input))}</pre>
+  <p class='muted'>{_safe(record.timestamp)} · Operation: {_safe(_query_operation(record))} · Status: <span class='badge {'success' if record.status == 'ok' else 'failed'}'>{_safe(record.status)}</span> · Duration: {_safe(round(record.duration_ms, 3))} ms</p>
+    {f"<p class='muted'><strong>Logical Entity:</strong> {_safe(logical_entity)} (schema_id={_safe(schema_id)})</p>" if logical_entity else ''}
+        {f"<p class='muted'><strong>Fields:</strong> {_safe(', '.join(str(f) for f in fields))}</p>" if fields else ''}
+        {f"<p class='muted'><strong>Filters:</strong> {_safe(_json_pretty(filters))}</p>" if filters else ''}
+        {f"<p class='muted'><strong>Limit:</strong> {_safe(limit_value)}</p>" if limit_value not in (None, '') else ''}
+        {f"<p class='muted'><strong>Note:</strong> {_safe(note)}</p>" if note else ''}
         <strong>Logical Result</strong>
-        <pre>{_safe(_json_pretty(record.logical_result))}</pre>
-    <strong>Summary</strong>
-    <pre>{_safe(_json_pretty(record.summary))}</pre>
+        {_render_logical_result(record)}
 </div>
-{_render_query_explainability(record)}
 """
         )
 
     return _html_page("Query History", "".join(cards))
 
 
-@app.get("/acid", response_class=HTMLResponse)
-def acid_report() -> HTMLResponse:
-        report = _acid_report()
-        atomicity = report.get("atomicity", {})
-        consistency = report.get("consistency", {})
-        isolation = report.get("isolation", {})
-        durability = report.get("durability", {})
+@app.get("/monitor", response_class=HTMLResponse)
+def query_monitor(
+        status: str = "all",
+        operation: str = "all",
+        limit: int = 100,
+) -> HTMLResponse:
+        recent_records = _filter_query_records(
+                session.queries[::-1],
+                status=status,
+                operation=operation,
+                limit=_safe_int(limit, 100),
+        )
+        metrics = _aggregate_query_metrics(recent_records)
 
-        sql_counts = durability.get("sql_tables", {})
-        mongo_counts = durability.get("mongo_collections", {})
-        fk_report = consistency.get("fk_violations", {})
+        op_rows = "".join(
+                f"<tr><td>{_safe(op)}</td><td>{_safe(data.get('total'))}</td><td>{_safe(data.get('ok'))}</td><td>{_safe(data.get('failed'))}</td></tr>"
+                for op, data in metrics.get("operation_breakdown", {}).items()
+        )
+        if not op_rows:
+                op_rows = "<tr><td colspan='4' class='muted'>No data</td></tr>"
+
+        recent_rows = "".join(
+                f"<tr><td>{_safe(record.timestamp)}</td><td>{_safe(_query_operation(record))}</td><td>{_safe(record.status)}</td><td>{_safe(round(record.duration_ms, 3))}</td></tr>"
+                for record in recent_records[:20]
+        )
+        if not recent_rows:
+                recent_rows = "<tr><td colspan='4' class='muted'>No query history yet.</td></tr>"
+
+        perf_summary = _perf_summary_artifact() or {}
+        recent_schema_ids = sorted(
+            {
+                int((record.query_input or {}).get("schema_id"))
+                for record in recent_records
+                if isinstance((record.query_input or {}).get("schema_id"), int)
+            }
+        )
+        live_distribution_payload = _live_distribution_from_registry(recent_schema_ids)
+        distribution = live_distribution_payload.get("distribution") if isinstance(live_distribution_payload, dict) else {}
+        if not isinstance(distribution, dict) or not any(int(distribution.get(k, 0) or 0) for k in ("sql", "mongo", "buffer", "unknown")):
+            artifact_distribution = perf_summary.get("distribution") if isinstance(perf_summary, dict) else {}
+            distribution = artifact_distribution if isinstance(artifact_distribution, dict) else {"sql": 0, "mongo": 0, "buffer": 0, "unknown": 0}
+            distribution_source = "artifact:assignment4_perf_summary.json"
+            distribution_entities = []
+        else:
+            distribution_source = str(live_distribution_payload.get("source") or "registry")
+            distribution_entities = live_distribution_payload.get("entities") if isinstance(live_distribution_payload.get("entities"), list) else []
+
+        def _metric_row(label: str, key: str) -> str:
+            source = perf_summary.get(key) if isinstance(perf_summary, dict) else None
+            if not isinstance(source, dict):
+                return (
+                    f"<tr><td>{_safe(label)}</td><td colspan='3' class='muted'>"
+                    "No benchmark artifact data found for this metric.</td></tr>"
+                )
+            return (
+                f"<tr><td>{_safe(label)}</td>"
+                f"<td>{_safe(source.get('avg_latency_ms'))}</td>"
+                f"<td>{_safe(source.get('throughput_ops_per_sec'))}</td>"
+                f"<td>{_safe(source.get('p95_latency_ms'))}</td></tr>"
+            )
+
+        benchmark_rows = "".join(
+            [
+                _metric_row("Data ingestion latency", "ingestion"),
+                _metric_row("Logical query response time", "logical_query"),
+                _metric_row("Metadata lookup overhead", "metadata_lookup"),
+                _metric_row("Transaction coordination overhead (SQL + MongoDB)", "transaction_coordination_overhead"),
+            ]
+        )
+
+        distribution_rows = "".join(
+            [
+                f"<tr><td>SQL</td><td>{_safe(distribution.get('sql', 0))}</td></tr>",
+                f"<tr><td>MongoDB</td><td>{_safe(distribution.get('mongo', 0))}</td></tr>",
+                f"<tr><td>Buffer</td><td>{_safe(distribution.get('buffer', 0))}</td></tr>",
+                f"<tr><td>Unknown</td><td>{_safe(distribution.get('unknown', 0))}</td></tr>",
+            ]
+        )
 
         body = f"""
 <div class='card'>
-    <h2>ACID Validation Report</h2>
-    <p class='muted'>Snapshot based on current data in SQL/Mongo backends.</p>
+    <h2>Query Monitor</h2>
+    <p class='muted'>Scope: status={_safe(status)} · operation={_safe(operation)} · limit={_safe(limit)}</p>
+    <div class='grid'>
+        <div><strong>Total Queries</strong><br />{_safe(metrics.get('total_queries'))}</div>
+        <div><strong>Successful</strong><br />{_safe(metrics.get('success_queries'))}</div>
+        <div><strong>Failed</strong><br />{_safe(metrics.get('failed_queries'))}</div>
+        <div><strong>Average Query Latency (ms)</strong><br />{_safe(metrics.get('avg_latency_ms'))}</div>
+        <div><strong>P95 Latency (ms)</strong><br />{_safe(metrics.get('p95_latency_ms'))}</div>
+        <div><strong>Throughput (operations per second)</strong><br />{_safe(metrics.get('throughput_qps'))}</div>
+    </div>
+</div>
+
+<div class='card'>
+    <h3>Performance Metrics (Assignment Experiments)</h3>
+    <p class='muted'>Based on benchmark artifact summary for ingestion, logical query, metadata lookup, and SQL+MongoDB transaction coordination overhead.</p>
+    <table>
+        <thead><tr><th>Metric Source</th><th>Average Latency (ms)</th><th>Throughput (ops/sec)</th><th>P95 (ms)</th></tr></thead>
+        <tbody>{benchmark_rows}</tbody>
+    </table>
+</div>
+
+<div class='card'>
+    <h3>Distribution of Data Across Storage Backends</h3>
+    <p class='muted'>Source: {_safe(distribution_source)}</p>
+    <p class='muted'>Entities in scope: {_safe(', '.join(str(entity) for entity in distribution_entities) if distribution_entities else 'all available entities')}</p>
+    <table>
+        <thead><tr><th>Backend</th><th>Mapped Fields</th></tr></thead>
+        <tbody>{distribution_rows}</tbody>
+    </table>
+</div>
+
+<div class='card'>
+    <h3>Operation Breakdown</h3>
+    <table>
+        <thead><tr><th>Operation</th><th>Total</th><th>OK</th><th>Failed</th></tr></thead>
+        <tbody>{op_rows}</tbody>
+    </table>
+</div>
+
+<div class='card'>
+    <h3>Recent Queries</h3>
+    <table>
+        <thead><tr><th>Timestamp</th><th>Operation</th><th>Status</th><th>Duration (ms)</th></tr></thead>
+        <tbody>{recent_rows}</tbody>
+    </table>
+</div>
+"""
+        return _html_page("Query Monitor", body)
+
+
+@app.get("/comparison", response_class=HTMLResponse)
+def performance_comparison() -> HTMLResponse:
+    artifact_dir = _perf_artifact_dir()
+    comparison_path = artifact_dir / "assignment4_comparison_comparison.json"
+    comparison = _read_json_artifact(comparison_path)
+
+    if not comparison:
+        body = """
+<div class='card'>
+    <h2>Performance Comparison</h2>
+    <p class='muted'>Comparison artifact not found yet.</p>
+    <p class='muted'>Run: <strong>python comparative_evaluation.py --iterations 20 --execute --output-prefix assignment4_comparison</strong></p>
+</div>
+"""
+        return _html_page("Performance Comparison", body)
+
+    logical = comparison.get("logical", {})
+    direct = comparison.get("direct", {})
+    overhead = comparison.get("overhead", {})
+    throughput_curve = comparison.get("throughput_curve", {})
+
+    bar_img = _image_data_uri(artifact_dir / "assignment4_comparison_latency_bar.png")
+    line_img = _image_data_uri(artifact_dir / "assignment4_comparison_throughput_line.png")
+
+    workload_rows = []
+    workloads = throughput_curve.get("workloads") or []
+    logical_series = throughput_curve.get("logical_ops_per_sec") or []
+    direct_sql_series = throughput_curve.get("direct_sql_ops_per_sec") or []
+    direct_mongo_series = throughput_curve.get("direct_mongo_ops_per_sec") or []
+
+    def _avg_series(values: List[Any]) -> Optional[float]:
+        cleaned = [float(v) for v in values if isinstance(v, (int, float))]
+        if not cleaned:
+            return None
+        return round(sum(cleaned) / len(cleaned), 3)
+
+    logical_tp_overall = logical.get("throughput_ops_per_sec")
+    direct_sql_tp_overall = direct.get("sql_throughput_ops_per_sec")
+    direct_mongo_tp_overall = direct.get("mongo_throughput_ops_per_sec")
+    if direct_sql_tp_overall is None:
+        direct_sql_tp_overall = _avg_series(direct_sql_series)
+    if direct_mongo_tp_overall is None:
+        direct_mongo_tp_overall = _avg_series(direct_mongo_series)
+
+    read_overhead_pct = (overhead.get("read") or {}).get("relative_percent")
+    nested_overhead_pct = (overhead.get("nested_read") or {}).get("relative_percent")
+    update_overhead_pct = (overhead.get("update") or {}).get("relative_percent")
+
+    read_metrics_rows = f"""
+            <tr>
+                <td>Query latency (ms)</td>
+                <td>{_safe(logical.get('read_avg_ms'))}</td>
+                <td>{_safe(direct.get('sql_read_avg_ms'))}</td>
+                <td>-</td>
+                <td>{_safe(read_overhead_pct)}</td>
+            </tr>
+            <tr>
+                <td>Update latency (ms)</td>
+                <td>-</td><td>-</td><td>-</td><td>-</td>
+            </tr>
+            <tr>
+                <td>System throughput (ops/sec)</td>
+                <td>{_safe(logical_tp_overall)}</td>
+                <td>{_safe(direct_sql_tp_overall)}</td>
+                <td>{_safe(direct_mongo_tp_overall)}</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>Query processing overhead introduced by framework (%)</td>
+                <td>{_safe(read_overhead_pct)}</td>
+                <td>-</td><td>-</td><td>-</td>
+            </tr>
+    """
+
+    nested_metrics_rows = f"""
+            <tr>
+                <td>Query latency (ms)</td>
+                <td>{_safe(logical.get('nested_read_avg_ms'))}</td>
+                <td>-</td>
+                <td>{_safe(direct.get('mongo_read_avg_ms'))}</td>
+                <td>{_safe(nested_overhead_pct)}</td>
+            </tr>
+            <tr>
+                <td>Update latency (ms)</td>
+                <td>-</td><td>-</td><td>-</td><td>-</td>
+            </tr>
+            <tr>
+                <td>System throughput (ops/sec)</td>
+                <td>{_safe(logical_tp_overall)}</td>
+                <td>{_safe(direct_sql_tp_overall)}</td>
+                <td>{_safe(direct_mongo_tp_overall)}</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>Query processing overhead introduced by framework (%)</td>
+                <td>{_safe(nested_overhead_pct)}</td>
+                <td>-</td><td>-</td><td>-</td>
+            </tr>
+    """
+
+    update_metrics_rows = f"""
+            <tr>
+                <td>Query latency (ms)</td>
+                <td>-</td><td>-</td><td>-</td><td>-</td>
+            </tr>
+            <tr>
+                <td>Update latency (ms)</td>
+                <td>{_safe(logical.get('update_avg_ms'))}</td>
+                <td>{_safe(direct.get('sql_update_avg_ms'))}</td>
+                <td>{_safe(direct.get('mongo_update_avg_ms'))}</td>
+                <td>{_safe(update_overhead_pct)}</td>
+            </tr>
+            <tr>
+                <td>System throughput (ops/sec)</td>
+                <td>{_safe(logical_tp_overall)}</td>
+                <td>{_safe(direct_sql_tp_overall)}</td>
+                <td>{_safe(direct_mongo_tp_overall)}</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>Query processing overhead introduced by framework (%)</td>
+                <td>{_safe(update_overhead_pct)}</td>
+                <td>-</td><td>-</td><td>-</td>
+            </tr>
+    """
+
+    def _num(value: Any) -> float:
+        try:
+            return float(value)
+        except Exception:
+            return 0.0
+
+    def _bar_rows(items: List[Dict[str, Any]], color: str) -> str:
+        max_value = max((_num(item.get("value")) for item in items), default=0.0)
+        if max_value <= 0:
+            max_value = 1.0
+        rows: List[str] = []
+        for item in items:
+            label = _safe(item.get("label", "-"))
+            value = _num(item.get("value"))
+            width_pct = round((value / max_value) * 100, 2) if value > 0 else 0.0
+            rows.append(
+                "<div style='display:grid;grid-template-columns:280px 1fr 90px;gap:10px;align-items:center;margin:8px 0;'>"
+                f"<div>{label}</div>"
+                "<div style='background:#e5e7eb;height:14px;border-radius:8px;overflow:hidden;'>"
+                f"<div style='height:100%;width:{width_pct}%;background:{color};'></div>"
+                "</div>"
+                f"<div>{_safe(round(value, 3))} ms</div>"
+                "</div>"
+            )
+        return "".join(rows)
+
+    query_latency_bars = _bar_rows(
+        [
+            {"label": "User Retrieval - Framework", "value": logical.get("read_avg_ms")},
+            {"label": "User Retrieval - Direct SQL", "value": direct.get("sql_read_avg_ms")},
+            {"label": "Nested Access - Framework", "value": logical.get("nested_read_avg_ms")},
+            {"label": "Nested Access - Direct MongoDB", "value": direct.get("mongo_read_avg_ms")},
+        ],
+        color="#0369a1",
+    )
+
+    update_latency_bars = _bar_rows(
+        [
+            {"label": "Cross-Entity Update - Framework", "value": logical.get("update_avg_ms")},
+            {"label": "Cross-Entity Update - Direct SQL", "value": direct.get("sql_update_avg_ms")},
+            {"label": "Cross-Entity Update - Direct MongoDB", "value": direct.get("mongo_update_avg_ms")},
+        ],
+        color="#0f766e",
+    )
+
+    for idx, point in enumerate(workloads):
+        logical_tp = logical_series[idx] if idx < len(logical_series) else "-"
+        direct_sql_tp = direct_sql_series[idx] if idx < len(direct_sql_series) else "-"
+        direct_mongo_tp = direct_mongo_series[idx] if idx < len(direct_mongo_series) else "-"
+        workload_rows.append(
+            f"<tr><td>{_safe(point)}</td><td>{_safe(logical_tp)}</td><td>{_safe(direct_sql_tp)}</td><td>{_safe(direct_mongo_tp)}</td></tr>"
+        )
+
+    chart_block = ""
+    if bar_img:
+        chart_block += f"<div class='card'><h3>Latency Comparison (Bar Chart)</h3><img alt='Latency bar chart' src='{bar_img}' style='max-width:100%;height:auto;' /></div>"
+    if line_img:
+        chart_block += f"<div class='card'><h3>Throughput Under Workload (Line Graph)</h3><img alt='Throughput line chart' src='{line_img}' style='max-width:100%;height:auto;' /></div>"
+
+    body = f"""
+<div class='card'>
+    <h2>Hybrid Framework vs Direct SQL vs Direct MongoDB</h2>
+    <p class='muted'>Separate scenario tables compare framework against Direct SQL and Direct MongoDB using query latency, update latency, system throughput, and framework query-processing overhead.</p>
+</div>
+
+<div class='card'>
+    <h3>Retrieving user records through the logical query interface vs direct SQL queries</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Framework</th>
+                <th>Direct SQL</th>
+                <th>Direct MongoDB</th>
+                <th>Framework Overhead vs Direct (%)</th>
+            </tr>
+        </thead>
+        <tbody>{read_metrics_rows}</tbody>
+    </table>
+</div>
+
+<div class='card'>
+    <h3>Accessing nested documents using the framework vs direct MongoDB queries</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Framework</th>
+                <th>Direct SQL</th>
+                <th>Direct MongoDB</th>
+                <th>Framework Overhead vs Direct (%)</th>
+            </tr>
+        </thead>
+        <tbody>{nested_metrics_rows}</tbody>
+    </table>
+</div>
+
+<div class='card'>
+    <h3>Updating records across multiple entities</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Framework</th>
+                <th>Direct SQL</th>
+                <th>Direct MongoDB</th>
+                <th>Framework Overhead vs Direct (%)</th>
+            </tr>
+        </thead>
+        <tbody>{update_metrics_rows}</tbody>
+    </table>
+    <p class='muted'>Direct update latency is now tracked separately for SQL and MongoDB execution paths.</p>
+</div>
+
+<div class='card'>
+    <h3>Bar Charts Comparing Query Latency</h3>
+    <p class='muted'>Visual comparison for user retrieval and nested-document scenarios.</p>
+    {query_latency_bars}
+</div>
+
+<div class='card'>
+    <h3>Bar Chart Comparing Update Latency</h3>
+    <p class='muted'>Visual comparison for cross-entity update scenario.</p>
+    {update_latency_bars}
+</div>
+
+<div class='card'>
+    <h3>Throughput Table (Increasing Workload)</h3>
+    <table>
+        <thead><tr><th>Workload Point</th><th>Framework (ops/sec)</th><th>Direct SQL (ops/sec)</th><th>Direct MongoDB (ops/sec)</th></tr></thead>
+        <tbody>{''.join(workload_rows) if workload_rows else "<tr><td colspan='4' class='muted'>No throughput points found.</td></tr>"}</tbody>
+    </table>
+    <p class='muted'>Overall throughput: framework={_safe(logical.get('throughput_ops_per_sec'))} ops/sec, direct SQL={_safe(direct_sql_tp_overall)} ops/sec, direct MongoDB={_safe(direct_mongo_tp_overall)} ops/sec.</p>
+</div>
+
+{chart_block}
+"""
+    return _html_page("Performance Comparison", body)
+
+
+@app.get("/acid", response_class=HTMLResponse)
+def acid_report() -> HTMLResponse:
+    report = _acid_report()
+    atomicity = report.get("atomicity", {})
+    consistency = report.get("consistency", {})
+    isolation = report.get("isolation", {})
+    durability = report.get("durability", {})
+
+    fk_report = consistency.get("fk_violations", {})
+    consistency_missing = int(fk_report.get("total_missing", 0) or 0)
+    isolation_ok = bool(isolation.get("ok"))
+    durability_ok = bool(durability.get("sql_tables", {}).get("ok")) and bool(durability.get("mongo_collections", {}).get("ok"))
+    isolation_note = "Meets the required policy." if isolation_ok else "Does not meet the required policy."
+    consistency_note = "All logical relationships passed validation." if consistency.get("status") == "pass" else f"Validation found {consistency_missing} issue(s)."
+    durability_note = "Logical data snapshot is available." if durability_ok else "One or more logical data sources are unavailable."
+
+    body = f"""
+<div class='card'>
+    <h2>Validation Report</h2>
+    <p class='muted'>Snapshot based on the current logical data state.</p>
 </div>
 
 <div class='card'>
@@ -1130,43 +1935,45 @@ def acid_report() -> HTMLResponse:
     <h3>Consistency</h3>
     <p>Status: <span class='badge {'success' if consistency.get('status') == 'pass' else 'failed'}'>
         {_safe(consistency.get('status', 'unknown'))}</span></p>
-    <pre>{_safe(fk_report)}</pre>
+    <p class='muted'>{_safe(consistency_note)}</p>
 </div>
 
 <div class='card'>
     <h3>Isolation</h3>
-    <pre>{_safe(isolation)}</pre>
+    <p>Status: <span class='badge {'success' if isolation_ok else 'failed'}'>
+        {_safe('pass' if isolation_ok else 'fail')}</span></p>
+    <p class='muted'>{_safe(isolation_note)}</p>
 </div>
 
 <div class='card'>
-    <h3>Durability (Current Data)</h3>
-    <h4>SQL Table Counts</h4>
-    <pre>{_safe(sql_counts)}</pre>
-    <h4>Mongo Collection Counts</h4>
-    <pre>{_safe(mongo_counts)}</pre>
+    <h3>Durability</h3>
+    <p>Status: <span class='badge {'success' if durability_ok else 'failed'}'>
+        {_safe('pass' if durability_ok else 'fail')}</span></p>
+    <p class='muted'>{_safe(durability_note)}</p>
 </div>
 """
-
-        return _html_page("ACID Report", body)
+    return _html_page("ACID Report", body)
 
 
 @app.get("/connections", response_class=HTMLResponse)
 def connection_page() -> HTMLResponse:
-        results = _test_connections()
-        mysql = results.get("mysql", {})
-        mongo = results.get("mongo", {})
-        body = f"""
+    results = _test_connections()
+    mysql = results.get("mysql", {})
+    mongo = results.get("mongo", {})
+    primary_ok = bool(mysql.get("ok"))
+    secondary_ok = bool(mongo.get("ok"))
+    body = f"""
 <div class='card'>
-    <h2>Connection Test</h2>
+    <h2>Service Check</h2>
     <p>Status:</p>
     <ul>
-        <li>MySQL: <strong>{'OK' if mysql.get('ok') else 'FAILED'}</strong> { _safe(mysql.get('error', '')) }</li>
-        <li>MongoDB: <strong>{'OK' if mongo.get('ok') else 'FAILED'}</strong> { _safe(mongo.get('error', '')) }</li>
+        <li>Logical service A: <strong>{'OK' if primary_ok else 'FAILED'}</strong>{' connection unavailable' if not primary_ok else ''}</li>
+        <li>Logical service B: <strong>{'OK' if secondary_ok else 'FAILED'}</strong>{' connection unavailable' if not secondary_ok else ''}</li>
     </ul>
     <p class='muted'>Refresh this page to re-run the checks.</p>
 </div>
 """
-        return _html_page("Connection Test", body)
+    return _html_page("Service Check", body)
 
 
 def _resolve_or_register_entity(entity: Optional[str], payload: Dict[str, Any], operation: str) -> int:

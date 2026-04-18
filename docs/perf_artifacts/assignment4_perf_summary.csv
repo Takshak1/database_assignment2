@@ -1,0 +1,5 @@
+metric,runs,success,failed,avg_latency_ms,p50_latency_ms,p95_latency_ms,throughput_ops_per_sec
+ingestion,30,30,0,129.298,132.972,147.171,7.734
+logical_query,30,30,0,62.75,61.876,79.743,15.936
+metadata_lookup,30,30,0,0.001,0.001,0.002,961538.371
+transaction_coordination_overhead,30,30,0,5.171,0.0,25.056,193.392

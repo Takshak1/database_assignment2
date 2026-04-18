@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections import Counter
 from typing import Any, Dict, Iterable, List, Tuple
 
@@ -138,7 +139,11 @@ def _summarize_payloads(payloads: Iterable[Tuple[str, Dict[str, Any]]]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Insert university_data.json across normalized entities")
     parser.add_argument("--file", default="university_data.json", help="Path to the dataset JSON")
-    parser.add_argument("--endpoint", default="http://127.0.0.1:8002/crud_auto", help="CRUD auto endpoint")
+    parser.add_argument(
+        "--endpoint",
+        default=os.getenv("SCHEMA_REGISTRY_API_ENDPOINT", "http://127.0.0.1:8002/crud_auto"),
+        help="CRUD auto endpoint",
+    )
     parser.add_argument("--execute", action="store_true", help="Execute inserts against live backends")
     parser.add_argument("--dry-run", action="store_true", help="Only print planned inserts without calling API")
     parser.add_argument("--timeout", type=int, default=30, help="HTTP timeout (seconds)")

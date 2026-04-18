@@ -6,6 +6,8 @@ import types
 
 
 def _import_dashboard_module():
+    original_fastapi = sys.modules.get("fastapi")
+    original_fastapi_responses = sys.modules.get("fastapi.responses")
     if "fastapi" not in sys.modules:
         fastapi_stub = types.ModuleType("fastapi")
 
@@ -40,7 +42,17 @@ def _import_dashboard_module():
         sys.modules["fastapi"] = fastapi_stub
         sys.modules["fastapi.responses"] = fastapi_responses_stub
 
-    return importlib.import_module("dashboard_web")
+    try:
+        return importlib.import_module("dashboard_web")
+    finally:
+        if original_fastapi is not None:
+            sys.modules["fastapi"] = original_fastapi
+        else:
+            sys.modules.pop("fastapi", None)
+        if original_fastapi_responses is not None:
+            sys.modules["fastapi.responses"] = original_fastapi_responses
+        else:
+            sys.modules.pop("fastapi.responses", None)
 
 
 dashboard_web = _import_dashboard_module()
@@ -73,7 +85,7 @@ def test_empty_reason_sql_only_zero_rows() -> None:
     }
 
     reason = _build_empty_read_reason(details)
-    assert reason == "No SQL rows matched the current filters."
+    assert reason == "No records matched the current filters."
 
 
 def test_empty_reason_merge_mismatch_sql_without_mongo_docs() -> None:
@@ -89,7 +101,7 @@ def test_empty_reason_merge_mismatch_sql_without_mongo_docs() -> None:
     }
 
     reason = _build_empty_read_reason(details)
-    assert "no matching Mongo documents" in reason
+    assert "Partial logical fragments were found" in reason
     assert "post_id" in reason
 
 
@@ -129,3 +141,48 @@ def test_sql_zero_match_reason_uses_specific_hint_when_available(monkeypatch) ->
 def test_field_chip_rendering_has_separators() -> None:
     html = _format_field_chips(["student_id", "name", "cgpa"])
     assert "</span> <span" in html
+
+
+def test_empty_reason_handles_non_dict_details() -> None:
+    reason = _build_empty_read_reason(None)
+    assert reason == "No logical results returned."
+
+
+def test_empty_reason_mongo_only_zero_docs() -> None:
+    details = {
+        "field_locations": [
+            {"requested": "status", "status": "resolved", "storage": "mongo"},
+        ],
+        "mongo": [{"collection": "student_profiles", "filter": {"status": "active"}}],
+        "result_summary": {"sql_rows": 0, "mongo_documents": 0, "merged_items": 0},
+    }
+
+    reason = _build_empty_read_reason(details)
+    assert reason == "No records matched the current filters."
+
+
+def test_empty_reason_mixed_backends_without_merge_key_returns_data_fetched_message() -> None:
+    details = {
+        "field_locations": [
+            {"requested": "student_id", "status": "resolved", "storage": "sql"},
+            {"requested": "profile", "status": "resolved", "storage": "mongo"},
+        ],
+        "sql": {"statement": "SELECT id FROM students"},
+        "mongo": [{"collection": "student_profiles", "filter": {}}],
+        "merge": {},
+        "result_summary": {"sql_rows": 1, "mongo_documents": 2, "merged_items": 0},
+    }
+
+    reason = _build_empty_read_reason(details)
+    assert reason == "Data was fetched, but no merged logical records were produced."
+
+
+def test_field_chip_rendering_empty_list() -> None:
+    html = _format_field_chips([])
+    assert html == "<span class='muted'>None</span>"
+
+
+def test_field_chip_rendering_escapes_html_tags() -> None:
+    html = _format_field_chips(["<script>alert(1)</script>"])
+    assert "<script>" not in html
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
